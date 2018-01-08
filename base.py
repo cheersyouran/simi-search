@@ -24,7 +24,7 @@ def norm(X):
 
 
 def plot_stocks_price_plot(codes, prices, legend, n=True):
-    styles = ['k_', 'k--', 'k:', 'k-.']
+    styles = ['k--', 'k:', 'k-.']
     for i in range(codes.size):
         if n == True:
             prices[i] = norm(prices[i])
