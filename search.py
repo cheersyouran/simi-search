@@ -2,79 +2,70 @@ from scipy.stats.stats import pearsonr
 from datetime import timedelta
 from scipy.spatial import distance
 import base
-from base import norm
+from config import *
 import pandas as pd
 pd.set_option('display.width', 1000)
-import numpy as np
 
+def t_rol_aply(target, pattern, method='pearsonr'):
+    global ascending_sort
+    if method == 'pearsonr':
+        ascending_sort = False
+        return pearsonr(target, pattern)[0]
+    else:
+        ascending_sort = True
+        return distance.euclidean(base.norm(target), base.norm(pattern))
 
-code = '000001.SZ'
-time_period = 30
-start_date = pd.to_datetime('2017-01-01')
-nb_similarity = 2
-nb_sample = 50000
-ascending_sort = False
-
-def t_rol_aply(t, p):
-    result = pearsonr(t, p)[0]
-
-    # result = distance.euclidean(norm(t), norm(p))
+def target_apply(target, pattern):
+    p_close = pattern['CLOSE']
+    t_close = target['CLOSE']
+    target[similarity_method] = t_close.rolling(window=pattern_length).apply(func=t_rol_aply, args=(p_close,))
+    result = target.dropna(axis=0, how='any').sort_values(by=[similarity_method], ascending=ascending_sort).head(1)
     return result
 
-def target_apply(t, p):
-    p_close = p['CLOSE']
-    t_close = t['CLOSE']
-    t['pearson'] = t_close.rolling(window=time_period).apply(func=t_rol_aply, args=(p_close, ))
-    result = t.dropna(axis=0, how='any').sort_values(by=['pearson'], ascending=ascending_sort).head(1)
-    return result
+def load_and_process_data(date=None, nb_data=10000):
+    """
+    :param date: give a specific date to down-scope Targets
+    :param nb_data: if == 0, then use whole all_data.
+    :return: all_data, pattern, targets
+    """
 
-def load_and_process_data():
-    quote = base.load_data()
-    quote = quote.head(nb_sample)
-    quote = quote.loc[(quote != 0).any(axis=1)]
+    all_data = base.load_data()
+    all_data = all_data.loc[(all_data != 0).any(axis=1)]
 
-    pattern = quote[quote['CODE'] == code].reset_index(drop=True)
-    target = quote[quote['CODE'] != code].reset_index(drop=True)
+    pattern = all_data[all_data['CODE'] == code].reset_index(drop=True)
+    pattern = pattern[(pattern['DATE'] >= start_date)].head(pattern_length)
 
-    return quote, pattern, target
+    targets = all_data[all_data['CODE'] != code].reset_index(drop=True)
+    if nb_data != 0:
+        targets = targets.head(nb_data)
 
+    if date != None:
+        targets = targets[target['DATE'] >= date]
+
+    return all_data, pattern, targets
+
+def most_similar(pattern, targets, nb_similarity):
+
+    """
+    :return is the most similar stock(s).
+        most['CODE', 'DATE', 'Similarity_Score']
+    """
+    result = targets.groupby(['CODE']).apply(func=target_apply, pattern=pattern)
+    sorted_result = result.sort_values(by=[similarity_method], ascending=ascending_sort)
+
+    result = sorted_result.head(nb_similarity)
+
+    most = pd.DataFrame()
+    most['CODE'] = result['CODE']
+    most['DATE'] = result['DATE']
+    most[similarity_method] = result[similarity_method]
+
+    return most
 
 
 if __name__ == '__main__':
-    quote, pattern, target = load_and_process_data()
-    p = pattern[(pattern['DATE'] >= start_date)].head(time_period)
-
-    a = target.groupby(['CODE']).apply(lambda x: x['CODE'].iloc[0])
-
-    result = target.groupby(['CODE']).apply(func=target_apply, p=p)
-    sorted_result = result.sort_values(by=['pearson'], ascending=ascending_sort)
-
-    # 选出n项最匹配的
-    most = sorted_result.head(nb_similarity)
-
-    # 初始化绘图的数据
-    plot_codes = np.append(most['CODE'].values, code)
-    plot_dates = np.append(most['DATE'].values, None)
-    plot_prices = np.zeros([nb_similarity + 1, time_period])
-    plot_legend = list()
-
-    # 构造相似数据
-    for i in range(nb_similarity):
-        plot_quote = quote[quote['CODE'] == plot_codes[i]]
-        plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(time_period)
-        plot_prices[i] = plot_quote['CLOSE'].values
-        plot_legend.append(str(plot_codes[i]) + ":" + str(most[most['CODE'] == plot_codes[i]]['pearson'].values))
-
-    # 构造原数据
-    plot_prices[-1] = p['CLOSE'].values
-    plot_dates[-1] = p['DATE'].iloc[-1]
-    plot_legend.append(str(plot_codes[-1]))
-
-    for i in range(nb_similarity):
-        print(t_rol_aply(plot_prices[i], plot_prices[-1]))
-        assert t_rol_aply(plot_prices[i], plot_prices[-1]) == most[most['CODE'] == plot_codes[i]]['pearson'].values, 'calcu error!'
-
-    # 调用绘图函数
-    base.plot_stocks_price_plot(plot_codes, plot_prices, plot_legend)
+    data, pattern, target = load_and_process_data()
+    most = most_similar(pattern, target, nb_similarity)
+    base.plot_stocks_price_plot(most, data, pattern,)
 
     print('Finish')
