@@ -1,37 +1,24 @@
 #encoding:utf-8
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 from os import listdir, path
 from config import *
-
-RAW_DATA_DIR = './raw_data'
-DATA = './data/data.csv'
 
 def merge_raw_data():
     col = ['CODE', 'DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']
     mergeed_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
     mergeed_csv.to_csv("./data/data.csv", index=False)
 
-def load_data():
-    print('load data....')
-    df = pd.read_csv(DATA, parse_dates=['DATE'], low_memory=False)
-    return df
-
 def norm(X):
-    X = preprocessing.scale(X)
-    # X -= np.mean(X, axis=0)
-    return X
+    # result = preprocessing.scale(X)
+    result = X - np.mean(X, axis=0)
+    return result
 
-def test_data(date, time_span, df):
-    return df[df['DATE'] < pd.to_datetime(date)].tail(time_span)
-
-def plot_stocks_price_plot(most, data, pattern, normal=True):
-
+def plot_simi_stock(top, data, pattern, normal=True, similarity_method=similarity_method):
+    print('plot...')
     def init_plot_data():
-        plot_codes = np.append(most['CODE'].values, code)
-        plot_dates = np.append(most['DATE'].values, None)
+        plot_codes = np.append(top['CODE'].values, code)
+        plot_dates = np.append(top['DATE'].values, None)
         plot_prices = np.zeros([nb_similarity + 1, pattern_length])
         plot_legend = list()
         return plot_codes, plot_dates, plot_prices, plot_legend
@@ -44,7 +31,7 @@ def plot_stocks_price_plot(most, data, pattern, normal=True):
         plot_prices[i] = plot_quote['CLOSE'].values
         plot_legend.append(
             str(plot_codes[i]) + "," + similarity_method + ":" +
-            str(most[most['CODE'] == plot_codes[i]][similarity_method].values))
+            str(top[top['CODE'] == plot_codes[i]][similarity_method].values))
 
     # 存储原数据
     plot_prices[-1] = pattern['CLOSE'].values
@@ -55,7 +42,7 @@ def plot_stocks_price_plot(most, data, pattern, normal=True):
     for i in range(nb_similarity):
         import search
         print(search.t_rol_aply(plot_prices[i], plot_prices[-1]), similarity_method)
-        assert search.t_rol_aply(plot_prices[i], plot_prices[-1]) == most[most['CODE'] == plot_codes[i]][
+        assert search.t_rol_aply(plot_prices[i], plot_prices[-1]) == top[top['CODE'] == plot_codes[i]][
             similarity_method].values, 'calcu error!'
 
     # 绘图
@@ -70,15 +57,28 @@ def plot_stocks_price_plot(most, data, pattern, normal=True):
 
     plt.xlabel('Time')
     plt.ylabel('Close Price')
-    plt.legend(plot_legend, loc='upper right')
-    plt.title("Similarity Search["+ plot_codes[-1] +"]\n")
+    plt.legend(plot_legend, loc='upper left')
+    plt.title("Similarity Search[" + plot_codes[-1] + "]\n")
     plt.grid(True)
     # plt.xticks(fontsize=8, rotation=45)
     plt.ioff()
     plt.show()
     plt.close()
 
+def plot_nav_curve(pred_net_value, act_net_value, dates):
+    plt.plot(dates, pred_net_value, 'r-', label=pred_net_value, linewidth=1.5)
+    plt.plot(dates, act_net_value, 'k-', label=pred_net_value, linewidth=1.5)
+
+    plt.xlabel('Time')
+    plt.ylabel('Net Asset Value')
+    plt.legend(['strategy', 'baseline'], loc='upper left')
+    plt.title("Net Asset Value")
+    plt.grid(True)
+    plt.xticks(fontsize=8, rotation=45)
+    plt.ioff()
+    plt.show()
+    plt.close()
+
 if __name__ == '__main__':
     # merge_raw_data()
-    df = load_data().head(50)
-    print(df)
+    print('base main function...')
