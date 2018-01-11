@@ -51,6 +51,8 @@ def find_tops_similar(pattern, targets, nb_similarity=nb_similarity, similarity_
     :return is dataframe of the tops similar stock(s).
         colomns : ['CODE', 'DATE', 'Similarity_Score']
     """
+
+
     result = targets.groupby(['CODE']).apply(func=target_apply, pattern=pattern)
     sorted_result = result.sort_values(by=[similarity_method], ascending=ascending_sort)
 

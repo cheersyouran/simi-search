@@ -65,9 +65,9 @@ def plot_simi_stock(top, data, pattern, normal=True, similarity_method=similarit
     plt.show()
     plt.close()
 
-def plot_nav_curve(pred_net_value, act_net_value, dates):
-    plt.plot(dates, pred_net_value, 'r-', label=pred_net_value, linewidth=1.5)
-    plt.plot(dates, act_net_value, 'k-', label=pred_net_value, linewidth=1.5)
+def plot_nav_curve(strategy_net_value, act_net_value, dates):
+    plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
+    plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
 
     plt.xlabel('Time')
     plt.ylabel('Net Asset Value')
@@ -76,7 +76,8 @@ def plot_nav_curve(pred_net_value, act_net_value, dates):
     plt.grid(True)
     plt.xticks(fontsize=8, rotation=45)
     plt.ioff()
-    plt.show()
+    # plt.show()
+    plt.savefig('./pic/' + 'result.jpg')
     plt.close()
 
 if __name__ == '__main__':

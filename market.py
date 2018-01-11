@@ -23,13 +23,13 @@ def get_daily_action(start_date):
     income_ratio = (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
     # 实际值
-    act = pattern[pattern['DATE'] >= start_date].head(2)
+    act = data[(data['CODE'] == code) & (data['DATE'] >= start_date)].head(pattern_length + 1).tail(2)
     act_income_ratio = (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE']
 
     # 根据income_ratio来做决策
-    if income_ratio >= 0.001:
+    if income_ratio > 0:
         action = 1
-    elif income_ratio <= -0.005:
+    elif income_ratio < 0:
         action = -1
     else:
         action = 0
@@ -58,26 +58,26 @@ def pass_a_day(date):
 def regression_test(start_date, end_date):
     state = 0 # 当前持股状态，0未持股，1持股
     date = start_date
-    pred_net_value = [1.0]
+    strategy_net_value = [1.0]
     act_net_value = [1.0]
     dates = [date]
     while date <= end_date:
 
-        action, pred_income_ratio, act_income_ratio = get_daily_action(date)
+        action, strategy_income_ratio, act_income_ratio = get_daily_action(date)
         if (state == 0) & (action == 1):
             print('[Action]: Buy in!')
             state = 1
-            pred_net_value.append(pred_net_value[-1] * (1 + pred_income_ratio))
+            strategy_net_value.append(strategy_net_value[-1])
         elif (state == 0) & (action != 1):
             print('[Action]: Keep empty')
-            pred_net_value.append(pred_net_value[-1])
+            strategy_net_value.append(strategy_net_value[-1])
         elif (state == 1) & (action == -1):
             print('[Action]: Sold out')
             state = 0
-            pred_net_value.append(pred_net_value[-1] * (1 + pred_income_ratio))
+            strategy_net_value.append(strategy_net_value[-1] * (1 + act_income_ratio))
         elif (state == 1) & (action != -1):
             print('[Action]: Keep full')
-            pred_net_value.append(pred_net_value[-1] * (1 + pred_income_ratio))
+            strategy_net_value.append(strategy_net_value[-1] * (1 + act_income_ratio))
         else:
             raise Exception('No Such Combination! state:' + state + ', action:' + action)
 
@@ -86,9 +86,10 @@ def regression_test(start_date, end_date):
         date = pass_a_day(date)
         dates.append(date)
 
-    return pred_net_value, act_net_value, dates
+        plot_nav_curve(strategy_net_value, act_net_value, dates)
+
+    return strategy_net_value, act_net_value, dates
 
 if __name__ == '__main__':
     start_date = get_recent_weekdays(start_date)
     pred_net_value, act_net_value, dates = regression_test(start_date, start_date + timedelta(days=regression_days))
-    plot_nav_curve(pred_net_value, act_net_value, dates)
