@@ -1,21 +1,49 @@
 #encoding:utf-8
+from os import listdir, path
+from codes.config import *
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
-from os import listdir, path
-from config import *
+
 
 def merge_raw_data():
+    print('merge raw data...')
     col = ['CODE', 'DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']
     mergeed_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
     mergeed_csv.to_csv("./data/data.csv", index=False)
 
+def gen_std_data():
+    def rolling_aply(data):
+        # mean = np.mean(data, axis=0)
+        std = np.std(data, axis=0)
+        return std
+
+    def apply(data):
+        result = data.rolling(window=pattern_length).apply(func=rolling_aply)
+        return result
+
+    print('pre-process data...')
+    data = pd.read_csv(DATA, parse_dates=['DATE'], low_memory=False)
+    data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+    data.to_csv(STD_DATA, index=False)
+
+def gen_800_data():
+    codes = pd.read_csv(ZZ800_CODES)
+    data = pd.read_csv(DATA)
+    data = data[data['CODE'].isin(codes.values)]
+
+    std_data = pd.read_csv(STD_DATA)
+    std_data = std_data[std_data['CODE'].isin(codes.values)]
+
+    data.to_csv(ZZ800_DATA, index=False)
+    std_data.to_csv(ZZ800_STD_DATA, index=False)
+
 def norm(X):
-    # result = preprocessing.scale(X)
-    result = X - np.mean(X, axis=0)
+    result = preprocessing.scale(X)
+    # result = X - np.mean(X, axis=0)
     return result
 
-def plot_simi_stock(top, data, pattern, normal=True, similarity_method=similarity_method):
-    print('plot...')
+def plot_simi_stock(top, data, pattern, filename):
+    print('plot simi stock...')
     def init_plot_data():
         plot_codes = np.append(top['CODE'].values, code)
         plot_dates = np.append(top['DATE'].values, None)
@@ -39,17 +67,17 @@ def plot_simi_stock(top, data, pattern, normal=True, similarity_method=similarit
     plot_legend.append(str(plot_codes[-1]))
 
     # 验证结果
+    from codes import all_search
     for i in range(nb_similarity):
-        import search
-        print(search.t_rol_aply(plot_prices[i], plot_prices[-1]), similarity_method)
-        assert search.t_rol_aply(plot_prices[i], plot_prices[-1]) == top[top['CODE'] == plot_codes[i]][
-            similarity_method].values, 'calcu error!'
+        a = all_search.t_rol_aply(plot_prices[i], plot_prices[-1])
+        b = top[top['CODE'] == plot_codes[i]][similarity_method].values
+        print(a, b)
+        # assert a == b, 'calcu error!'
 
     # 绘图
     line_styles = ['k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
-        if normal == True:
-            plot_prices[i] = norm(plot_prices[i])
+        plot_prices[i] = norm(plot_prices[i])
         if i == plot_codes.size - 1:
             plt.plot(plot_prices[i], 'r-', label=plot_prices[i], linewidth=1.5)
         else:
@@ -62,10 +90,12 @@ def plot_simi_stock(top, data, pattern, normal=True, similarity_method=similarit
     plt.grid(True)
     # plt.xticks(fontsize=8, rotation=45)
     plt.ioff()
-    plt.show()
+    # plt.show()
+    plt.savefig('../pic/' + filename+'.jpg')
     plt.close()
 
 def plot_nav_curve(strategy_net_value, act_net_value, dates):
+    print('plot nav curve...')
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
     plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
 
@@ -74,12 +104,15 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
     plt.legend(['strategy', 'baseline'], loc='upper left')
     plt.title("Net Asset Value")
     plt.grid(True)
-    plt.xticks(fontsize=8, rotation=45)
+    # plt.xticks(fontsize=8, rotation=45)
+    plt.xticks(fontsize=8)
     plt.ioff()
     # plt.show()
-    plt.savefig('./pic/' + 'result.jpg')
+    plt.savefig('../pic/' + 'result.jpg')
     plt.close()
 
 if __name__ == '__main__':
     # merge_raw_data()
+    gen_800_data()
+    # gen_std_data()
     print('base main function...')

@@ -1,18 +1,21 @@
-from config import *
-from datetime import timedelta
-from base import plot_nav_curve
+from codes.config import *
+from codes.base import plot_nav_curve
 
 data_set = None
 
+import os
+
+# 加载数据
 def load_all_data():
     global data_set
     if data_set is None:
         print('load data from disk....')
-        data_set = pd.read_csv(DATA, parse_dates=['DATE'], low_memory=False)
+        data_set = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
     return data_set
 
+# 获取每日的操作
 def get_daily_action(start_date):
-    from search import load_and_process_data, find_tops_similar
+    from codes.all_search import load_and_process_data, find_tops_similar
 
     data, pattern, target = load_and_process_data(start_date)
     tops = find_tops_similar(pattern, target, nb_similarity)

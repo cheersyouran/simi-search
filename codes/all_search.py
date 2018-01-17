@@ -1,12 +1,13 @@
-from scipy.stats.stats import pearsonr
+from codes.config import *
 from scipy.spatial import distance
-from base import norm, plot_simi_stock
-from market import load_all_data
-from config import *
-pd.set_option('display.width', 1000)
+from scipy.stats.stats import pearsonr
 
+from codes.base import norm, plot_simi_stock
+from codes.market import load_all_data
 
-def t_rol_aply(target, pattern, similarity_method):
+count = 0
+
+def t_rol_aply(target, pattern):
     global ascending_sort
     if similarity_method == 'pearsonr':
         ascending_sort = False
@@ -16,13 +17,34 @@ def t_rol_aply(target, pattern, similarity_method):
         return distance.euclidean(norm(target), norm(pattern))
 
 def target_apply(target, pattern):
+    global count
     p_close = pattern['CLOSE']
     t_close = target['CLOSE']
-    target[similarity_method] = t_close.rolling(window=pattern_length).apply(func=t_rol_aply, args=(p_close, similarity_method, ))
+    target[similarity_method] = t_close.rolling(window=pattern_length).apply(func=t_rol_aply, args=(p_close, ))
     result = target.dropna(axis=0, how='any').sort_values(by=[similarity_method], ascending=ascending_sort).head(1)
+    count = count + 1
     return result
 
-def load_and_process_data(start_date, date=None, nb_data=nb_data, code=code):
+def find_tops_similar(pattern, targets):
+
+    """
+    :return is dataframe of the tops similar stock(s).
+        colomns : ['CODE', 'DATE', 'Similarity_Score']
+    """
+
+    result = targets.groupby(['CODE']).apply(func=target_apply, pattern=pattern)
+    sorted_result = result.sort_values(by=[similarity_method], ascending=ascending_sort)
+
+    result = sorted_result.head(nb_similarity)
+
+    tops = pd.DataFrame()
+    tops['CODE'] = result['CODE']
+    tops['DATE'] = result['DATE']
+    tops[similarity_method] = result[similarity_method]
+
+    return tops
+
+def load_and_process_data(start_date, date=None):
     """
     :param start_date: give a specific date to down-scope Pattern.(包含这一天，即预测下一天)
     :param date: give a specific date to down-scope Targets
@@ -45,30 +67,14 @@ def load_and_process_data(start_date, date=None, nb_data=nb_data, code=code):
 
     return all_data, pattern, targets
 
-def find_tops_similar(pattern, targets, nb_similarity=nb_similarity, similarity_method=similarity_method):
-
-    """
-    :return is dataframe of the tops similar stock(s).
-        colomns : ['CODE', 'DATE', 'Similarity_Score']
-    """
-
-
-    result = targets.groupby(['CODE']).apply(func=target_apply, pattern=pattern)
-    sorted_result = result.sort_values(by=[similarity_method], ascending=ascending_sort)
-
-    result = sorted_result.head(nb_similarity)
-
-    tops = pd.DataFrame()
-    tops['CODE'] = result['CODE']
-    tops['DATE'] = result['DATE']
-    tops[similarity_method] = result[similarity_method]
-
-    return tops
-
-
 if __name__ == '__main__':
+    time_start = time.time()
+
     data, pattern, target = load_and_process_data(start_date)
-    tops = find_tops_similar(pattern, target, nb_similarity)
-    plot_simi_stock(tops, data, pattern, )
+    tops = find_tops_similar(pattern, target)
+    plot_simi_stock(tops, data, pattern, 'all_simi_search')
+
+    time_end = time.time()
+    print('Time is:', time_end - time_start)
 
     print('finish search!')
