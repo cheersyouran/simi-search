@@ -4,7 +4,6 @@ from codes.config import *
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 
-
 def merge_raw_data():
     print('merge raw data...')
     col = ['CODE', 'DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']
@@ -23,18 +22,24 @@ def gen_std_data():
 
     print('pre-process data...')
     data = pd.read_csv(DATA, parse_dates=['DATE'], low_memory=False)
-    data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+    # data['CLOSE'] = (data['CLOSE'] - np.min(data['CLOSE'])) / (np.max(data['CLOSE']) - np.min(data['CLOSE']))
+    # data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+
+    data['CLOSE_NORM'] = (data['CLOSE'] - np.min(data['CLOSE'])) / (np.max(data['CLOSE']) - np.min(data['CLOSE']))
+    data['std'] = data.groupby(['CODE'])['CLOSE_NORM'].apply(func=apply)
+    data = data.drop(['CLOSE_NORM'], axis=1)
     data.to_csv(STD_DATA, index=False)
 
 def gen_800_data():
     codes = pd.read_csv(ZZ800_CODES)
     data = pd.read_csv(DATA)
     data = data[data['CODE'].isin(codes.values)]
+    data.to_csv(ZZ800_DATA, index=False)
 
+def gen_800_std_data():
+    codes = pd.read_csv(ZZ800_CODES)
     std_data = pd.read_csv(STD_DATA)
     std_data = std_data[std_data['CODE'].isin(codes.values)]
-
-    data.to_csv(ZZ800_DATA, index=False)
     std_data.to_csv(ZZ800_STD_DATA, index=False)
 
 def norm(X):
@@ -46,7 +51,8 @@ def plot_simi_stock(top, data, pattern, filename):
     print('plot simi stock...')
     def init_plot_data():
         plot_codes = np.append(top['CODE'].values, code)
-        plot_dates = np.append(top['DATE'].values, None)
+        plot_dates = list(top['DATE'].values)
+        plot_dates.append(None)
         plot_prices = np.zeros([nb_similarity + 1, pattern_length])
         plot_legend = list()
         return plot_codes, plot_dates, plot_prices, plot_legend
@@ -113,6 +119,8 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
 
 if __name__ == '__main__':
     # merge_raw_data()
-    gen_800_data()
-    # gen_std_data()
+    # gen_800_data()
+
+    gen_std_data()
+    gen_800_std_data()
     print('base main function...')

@@ -14,12 +14,12 @@ ZZ800_CODES = '../data/800_codes.csv'
 code = '000001.SZ' # 被搜索股票的code
 
 pattern_length = 30 # 被搜索股票的长度
-start_date = pd.to_datetime('2017-01-01') # 被搜索股票的起始时间
+start_date = pd.to_datetime('2016-01-01') # 被搜索股票的起始时间
 
 regression_days = 60
 
-similarity_method = 'pearsonr'
-# similarity_method = 'euclidean'
+# similarity_method = 'pearsonr'
+similarity_method = 'euclidean'
 nb_similarity = 2 # 返回target票数目
 nb_data = 0 # 若设置为0，则targets用全部数据集
 

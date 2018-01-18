@@ -1,5 +1,6 @@
 from codes.config import *
 from scipy.stats.stats import pearsonr
+from scipy.spatial import distance
 from codes.base import plot_simi_stock
 from codes.market import load_all_data
 
@@ -8,7 +9,7 @@ def part_search():
     # std_data = std_data.loc[~(std_data.isnull()).any(axis=1)]
 
     pattern = std_data[(std_data['CODE'] == code) & (std_data['DATE'] >= start_date)].head(pattern_length)
-    targets = std_data[std_data['CODE'] != code].reset_index()
+    targets = std_data[std_data['CODE'] != code].reset_index(drop=True)
 
     std = pattern['std'].tail(1).values
     targets['std'] = (targets['std'] - std).abs()
@@ -18,10 +19,11 @@ def part_search():
     for i in sorted_std_diff.index.values:
         ith = sorted_std_diff.loc[i]
         result = targets[(targets['CODE'] == ith['CODE']) & (targets['DATE'] <= ith['DATE'])].tail(pattern_length)
-        sorted_std_diff.loc[i, similarity_method] = pearsonr(result['CLOSE'], pattern['CLOSE'])[0]
+        # sorted_std_diff.loc[i, similarity_method] = pearsonr(result['CLOSE'], pattern['CLOSE'])[0]
+        sorted_std_diff.loc[i, similarity_method] = distance.euclidean(result['CLOSE'], pattern['CLOSE'])
 
     # sorted_std_diff.loc[20887, similarity_method] = 1
-    tops = sorted_std_diff.sort_values(ascending=False, by=[similarity_method]).head(2)
+    tops = sorted_std_diff.sort_values(ascending=True, by=[similarity_method]).head(2)
 
     return tops, pattern
 
