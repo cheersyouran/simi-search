@@ -1,12 +1,26 @@
-##Stock History Similarity Search
+## Stock History Similarity Search
 
-### Demo Result for 'Pearson'
+### I. 基于欧几里得距离的查找结果
 ![Image of Result](https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20170101-Pearson.png)
 
-**[Search Code]: 000001.SZ
-**
+**[查找股票]: 000001.SZ**
 
+**[起止时间]: 2016-01-01 至 30个交易日**
 
+**[查找数据集]: 中证800五年的日行情数据**
 
-***All pictures can be found in './pic' folder.***
-***Picture-Name-Format: StockID-TimePeriod-StartDate-Mathod.png***
+<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20170101-Pearson.png" width = "60%" height = "60%" alt="1" align=center />
+
+### II. 基于欧几里得距离和标准差的快速查找结果
+
+**[查找股票]: 000001.SZ**
+
+**[起止时间]: 2016-01-01 至 30个交易日**
+
+**[查找数据集]: 中证800五年的日行情数据**
+
+<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20170101-Pearson.png" width = "60%" height = "60%" alt="1" align=center />
+
+### III. 基于皮尔森相关系数的查找结果
+
+### IV. 基于皮尔森相关系数和小波变换的快速查找结果
