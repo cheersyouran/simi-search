@@ -24,3 +24,4 @@ nb_similarity = 2 # 返回target票数目
 nb_data = 0 # 若设置为0，则targets用全部数据集
 
 ascending_sort = True
+WAVE = True

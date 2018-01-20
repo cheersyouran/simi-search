@@ -34,6 +34,6 @@ if __name__ == '__main__':
     time_start = time.time()
     tops, pattern = part_search()
     time_end = time.time()
-    print('Time is:', time_end - time_start)
+    print('Part Time is:', time_end - time_start)
 
     plot_simi_stock(tops, all_data, pattern, 'part_simi_search')

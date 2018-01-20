@@ -3,6 +3,7 @@ from os import listdir, path
 from codes.config import *
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
+import pywt
 
 def merge_raw_data():
     print('merge raw data...')
@@ -12,8 +13,19 @@ def merge_raw_data():
 
 def gen_std_data():
     def rolling_aply(data):
+        if WAVE == True:
+            data_ = preprocessing.scale(data)
+            coeff = pywt.wavedec(data_, 'db4', mode='sym', level=2)
+            for i in range(3):
+                cD = coeff[i]
+                if i not in [0]:
+                    for j in range(len(cD)):
+                        coeff[i][j] = 0
+            denoised_close = pywt.waverec(coeff, 'db4')
+        else:
+            denoised_close = data
         # mean = np.mean(data, axis=0)
-        std = np.std(data, axis=0)
+        std = np.std(denoised_close, axis=0)
         return std
 
     def apply(data):
@@ -25,9 +37,11 @@ def gen_std_data():
     # data['CLOSE'] = (data['CLOSE'] - np.min(data['CLOSE'])) / (np.max(data['CLOSE']) - np.min(data['CLOSE']))
     # data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
 
-    data['CLOSE_NORM'] = (data['CLOSE'] - np.min(data['CLOSE'])) / (np.max(data['CLOSE']) - np.min(data['CLOSE']))
+    data['CLOSE_NORM'] = data["CLOSE"]
+
     data['std'] = data.groupby(['CODE'])['CLOSE_NORM'].apply(func=apply)
     data = data.drop(['CLOSE_NORM'], axis=1)
+
     data.to_csv(STD_DATA, index=False)
 
 def gen_800_data():

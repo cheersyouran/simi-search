@@ -75,6 +75,6 @@ if __name__ == '__main__':
     plot_simi_stock(tops, data, pattern, 'all_simi_search')
 
     time_end = time.time()
-    print('Time is:', time_end - time_start)
+    print('All Time is:', time_end - time_start)
 
     print('finish search!')
