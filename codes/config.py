@@ -7,8 +7,10 @@ pd.set_option('display.width', 1000)
 RAW_DATA_DIR = '../raw_data'
 DATA = '../data/data.csv'
 STD_DATA = '../data/std_data.csv'
+
 ZZ800_DATA = '../data/800_data.csv'
 ZZ800_STD_DATA = '../data/800_std_data.csv'
+ZZ800_FFT_DATA = '../data/800_fft_data.csv'
 ZZ800_CODES = '../data/800_codes.csv'
 
 code = '000001.SZ' # 被搜索股票的code
@@ -25,3 +27,4 @@ nb_data = 0 # 若设置为0，则targets用全部数据集
 
 ascending_sort = True
 WAVE = True
+FOURIER = True

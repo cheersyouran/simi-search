@@ -11,7 +11,8 @@ def merge_raw_data():
     mergeed_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
     mergeed_csv.to_csv("./data/data.csv", index=False)
 
-def gen_std_data():
+def gen_800_wave_std_data():
+    print('pre process 800 wave std data...')
     def rolling_aply(data):
         if WAVE == True:
             data_ = preprocessing.scale(data)
@@ -24,7 +25,7 @@ def gen_std_data():
             denoised_close = pywt.waverec(coeff, 'db4')
         else:
             denoised_close = data
-        # mean = np.mean(data, axis=0)
+
         std = np.std(denoised_close, axis=0)
         return std
 
@@ -32,29 +33,39 @@ def gen_std_data():
         result = data.rolling(window=pattern_length).apply(func=rolling_aply)
         return result
 
-    print('pre-process data...')
-    data = pd.read_csv(DATA, parse_dates=['DATE'], low_memory=False)
-    # data['CLOSE'] = (data['CLOSE'] - np.min(data['CLOSE'])) / (np.max(data['CLOSE']) - np.min(data['CLOSE']))
-    # data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+    data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+    data.to_csv(ZZ800_STD_DATA, index=False)
 
-    data['CLOSE_NORM'] = data["CLOSE"]
+def gen_800_fft_date():
+    print('pre process 800 fft data...')
 
-    data['std'] = data.groupby(['CODE'])['CLOSE_NORM'].apply(func=apply)
-    data = data.drop(['CLOSE_NORM'], axis=1)
+    def rolling_aply_fft(data):
+        data_ = preprocessing.scale(data)
+        ffts = np.fft.fft(data_)/len(data_)
+        fft = np.abs(ffts[1])
+        return fft
 
-    data.to_csv(STD_DATA, index=False)
+    def rolling_aply_deg(data):
+        data_ = preprocessing.scale(data)
+        ffts = np.fft.fft(data_)/len(data_)
+        deg = np.rad2deg(np.angle(ffts[1]))
+        return deg
+
+    def apply(data, rolling_aply):
+        result = data.rolling(window=pattern_length).apply(func=rolling_aply)
+        return result
+
+    data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'])
+    data['fft'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft)
+    data['deg'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg)
+    data.to_csv(ZZ800_FFT_DATA, index=False)
 
 def gen_800_data():
     codes = pd.read_csv(ZZ800_CODES)
     data = pd.read_csv(DATA)
     data = data[data['CODE'].isin(codes.values)]
     data.to_csv(ZZ800_DATA, index=False)
-
-def gen_800_std_data():
-    codes = pd.read_csv(ZZ800_CODES)
-    std_data = pd.read_csv(STD_DATA)
-    std_data = std_data[std_data['CODE'].isin(codes.values)]
-    std_data.to_csv(ZZ800_STD_DATA, index=False)
 
 def norm(X):
     result = preprocessing.scale(X)
@@ -72,6 +83,7 @@ def plot_simi_stock(top, data, pattern, filename):
         return plot_codes, plot_dates, plot_prices, plot_legend
 
     plot_codes, plot_dates, plot_prices, plot_legend = init_plot_data()
+
     # 存储相似数据
     for i in range(nb_similarity):
         plot_quote = data[data['CODE'] == plot_codes[i]]
@@ -86,13 +98,16 @@ def plot_simi_stock(top, data, pattern, filename):
     plot_dates[-1] = pattern['DATE'].iloc[-1]
     plot_legend.append(str(plot_codes[-1]))
 
+    print('股票价格:')
+    print(plot_prices)
+
     # 验证结果
     from codes import all_search
     for i in range(nb_similarity):
         a = all_search.t_rol_aply(plot_prices[i], plot_prices[-1])
         b = top[top['CODE'] == plot_codes[i]][similarity_method].values
         print(a, b)
-        # assert a == b, 'calcu error!'
+        assert a == b, 'calcu error!'
 
     # 绘图
     line_styles = ['k--', 'k:', 'k-.']
@@ -134,7 +149,4 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
 if __name__ == '__main__':
     # merge_raw_data()
     # gen_800_data()
-
-    gen_std_data()
-    gen_800_std_data()
-    print('base main function...')
+    gen_800_fft_date()
