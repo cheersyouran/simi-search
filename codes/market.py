@@ -3,8 +3,6 @@ from codes.base import plot_nav_curve
 
 data_set = None
 
-import os
-
 # 加载数据
 def load_all_data():
     global data_set

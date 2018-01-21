@@ -40,25 +40,33 @@ def gen_800_wave_std_data():
 def gen_800_fft_date():
     print('pre process 800 fft data...')
 
-    def rolling_aply_fft(data):
+    def rolling_aply_fft(data, freq):
         data_ = preprocessing.scale(data)
         ffts = np.fft.fft(data_)/len(data_)
-        fft = np.abs(ffts[1])
+        fft = np.abs(ffts[freq])
         return fft
 
-    def rolling_aply_deg(data):
+    def rolling_aply_deg(data, freq):
         data_ = preprocessing.scale(data)
         ffts = np.fft.fft(data_)/len(data_)
-        deg = np.rad2deg(np.angle(ffts[1]))
+        deg = np.rad2deg(np.angle(ffts[freq]))
         return deg
 
-    def apply(data, rolling_aply):
-        result = data.rolling(window=pattern_length).apply(func=rolling_aply)
+    def apply(data, rolling_aply, freq):
+        result = data.rolling(window=pattern_length).apply(func=rolling_aply, args=(freq,))
         return result
 
     data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'])
-    data['fft'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft)
-    data['deg'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg)
+
+    # data['fft1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1)
+    # data['deg1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=1)
+    # data['fft2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2)
+    # data['deg2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=2)
+
+    data = pd.read_csv(ZZ800_FFT_DATA, parse_dates=['DATE'])
+    data['fft3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=3)
+    data['deg3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=3)
+
     data.to_csv(ZZ800_FFT_DATA, index=False)
 
 def gen_800_data():
