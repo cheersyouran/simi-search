@@ -13,10 +13,15 @@ def load_all_data():
 
 # 获取每日的操作
 def get_daily_action(start_date):
-    from codes.all_search import load_and_process_data, find_tops_similar
 
-    data, pattern, target = load_and_process_data(start_date)
-    tops = find_tops_similar(pattern, target, nb_similarity)
+    if speed_method == None:
+        from codes.all_search import load_and_process_data, find_tops_similar
+        data, pattern, target = load_and_process_data(start_date)
+        tops = find_tops_similar(pattern, target, nb_similarity)
+    else:
+        from codes.part_search import part_search
+        tops, pattern, target, data = part_search(speed_method, start_date)
+
     top1 = tops.iloc[0]
 
     # 预测值
@@ -64,7 +69,7 @@ def regression_test(start_date, end_date):
     dates = [date]
     while date <= end_date:
 
-        action, strategy_income_ratio, act_income_ratio = get_daily_action(date)
+        action, strategy_income_ratio, act_income_ratio = get_daily_action(date, )
         if (state == 0) & (action == 1):
             print('[Action]: Buy in!')
             state = 1

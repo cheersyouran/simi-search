@@ -4,12 +4,30 @@ from codes.config import *
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 import pywt
+import numpy as np
 
 def merge_raw_data():
     print('merge raw data...')
     col = ['CODE', 'DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']
     mergeed_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
-    mergeed_csv.to_csv("./data/data.csv", index=False)
+    mergeed_csv = mergeed_csv.drop_duplicates()
+    mergeed_csv.to_csv("../data/data.csv", index=False)
+
+def gen_800_nav_std_data():
+    print('pre process 800 wave std data...')
+
+    def rolling_aply(data):
+        std = np.std(data, axis=0)
+        return std
+
+    def apply(data):
+        data_ = data / data.iloc[0]
+        result = data_.rolling(window=pattern_length).apply(func=rolling_aply)
+        return result
+
+    data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+    data.to_csv(ZZ800_NAV_STD_DATA, index=False)
 
 def gen_800_wave_std_data():
     print('pre process 800 wave std data...')
@@ -58,12 +76,12 @@ def gen_800_fft_date():
 
     data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'])
 
-    # data['fft1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1)
-    # data['deg1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=1)
-    # data['fft2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2)
-    # data['deg2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=2)
+    data['fft1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1)
+    data['deg1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=1)
+    data['fft2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2)
+    data['deg2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=2)
 
-    data = pd.read_csv(ZZ800_FFT_DATA, parse_dates=['DATE'])
+    # data = pd.read_csv(ZZ800_FFT_DATA, parse_dates=['DATE'])
     data['fft3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=3)
     data['deg3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=3)
 
@@ -131,7 +149,7 @@ def plot_simi_stock(top, data, pattern, filename):
     plt.legend(plot_legend, loc='upper left')
     plt.title("Similarity Search[" + plot_codes[-1] + "]\n")
     plt.grid(True)
-    # plt.xticks(fontsize=8, rotation=45)
+    plt.xticks(fontsize=8, rotation=45)
     plt.ioff()
     # plt.show()
     plt.savefig('../pic/' + filename+'.jpg')
@@ -147,7 +165,7 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
     plt.legend(['strategy', 'baseline'], loc='upper left')
     plt.title("Net Asset Value")
     plt.grid(True)
-    # plt.xticks(fontsize=8, rotation=45)
+    plt.xticks(fontsize=8, rotation=45)
     plt.xticks(fontsize=8)
     plt.ioff()
     # plt.show()
@@ -155,6 +173,8 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
     plt.close()
 
 if __name__ == '__main__':
-    # merge_raw_data()
-    # gen_800_data()
+    merge_raw_data()
+    gen_800_data()
     gen_800_fft_date()
+    gen_800_nav_std_data()
+    gen_800_wave_std_data()
