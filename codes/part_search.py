@@ -2,19 +2,14 @@ from codes.config import *
 from scipy.stats.stats import pearsonr
 from scipy.spatial import distance
 from codes.base import plot_simi_stock, norm
-from codes.market import load_all_data
 
-def part_search(speed_method='fft', start_date=start_date):
+all_data = None
 
-    file = ZZ800_FFT_DATA if speed_method == 'fft' else ZZ800_STD_DATA
-    std_data = pd.read_csv(file, parse_dates=['DATE'])
+def part_search(pattern, targets, col='CLOSE'):
+
     # 舍弃0值
     # std_data = std_data[(std_data['CLOSE'] != 0)].any().reset_index()
-
-    pattern = std_data[(std_data['CODE'] == code) & (std_data['DATE'] >= start_date)].head(pattern_length)
-    targets = std_data[std_data['CODE'] != code].reset_index(drop=True)
-
-    if speed_method == 'fft':
+    if speed_method == 'fft_euclidean' or speed_method == 'wave_fft_euclidean' or speed_method == 'fft':
         targets['fft_deg'] = 0
         for i in range(1, 4):
             index = str(i)
@@ -40,22 +35,41 @@ def part_search(speed_method='fft', start_date=start_date):
         ith = sorted_std_diff.loc[i]
         result = targets[(targets['CODE'] == ith['CODE']) & (targets['DATE'] <= ith['DATE'])].tail(pattern_length)
         # sorted_std_diff.loc[i, similarity_method] = pearsonr(result['CLOSE'], pattern['CLOSE'])[0]
-        if result.shape[0] == 28:
-            print("")
-        sorted_std_diff.loc[i, similarity_method] = distance.euclidean(norm(result['CLOSE']), norm(pattern['CLOSE']))
+        sorted_std_diff.loc[i, similarity_method] = distance.euclidean(norm(result[col]), norm(pattern[col]))
 
-    tops = sorted_std_diff.sort_values(ascending=True, by=[similarity_method]).head(2)
+    if speed_method == 'fft':
+        tops = sorted_std_diff.head(2)
+    else:
+        tops = sorted_std_diff.sort_values(ascending=True, by=[similarity_method]).head(2)
 
-    return tops, pattern, targets, std_data
+    return tops
+
+def load_data(start_date=start_date):
+    col = 'CLOSE'
+    if speed_method == 'fft_euclidean' or speed_method == 'fft':
+        file = ZZ800_FFT_DATA
+    elif speed_method == 'wave_fft_euclidean':
+        file = ZZ800_WAVE_FFT_DATA
+        col = 'denoise_CLOSE'
+    else:
+        file = ZZ800_STD_DATA
+    global all_data
+    if all_data is None:
+        all_data = pd.read_csv(file, parse_dates=['DATE'])
+
+    targets = all_data[all_data['CODE'] != code].reset_index(drop=True)
+    pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
+
+    return all_data, pattern, targets, col
 
 if __name__ == '__main__':
 
-    all_data = load_all_data()
-
     time_start = time.time()
-    tops, pattern, targets, std_data = part_search('nav_std')
-    time_end = time.time()
 
+    all_data, pattern, targets, col = load_data(start_date)
+    tops = part_search(pattern, targets, col)
+
+    time_end = time.time()
     print('Part Time is:', time_end - time_start)
 
-    plot_simi_stock(tops, all_data, pattern, 'part_simi_search')
+    plot_simi_stock(tops, std_data, pattern, 'part_simi_search')

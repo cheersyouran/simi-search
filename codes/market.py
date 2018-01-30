@@ -1,15 +1,7 @@
 from codes.config import *
 from codes.base import plot_nav_curve
 
-data_set = None
-
 # 加载数据
-def load_all_data():
-    global data_set
-    if data_set is None:
-        print('load data from disk....')
-        data_set = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
-    return data_set
 
 # 获取每日的操作
 def get_daily_action(start_date):
@@ -19,8 +11,9 @@ def get_daily_action(start_date):
         data, pattern, target = load_and_process_data(start_date)
         tops = find_tops_similar(pattern, target, nb_similarity)
     else:
-        from codes.part_search import part_search
-        tops, pattern, target, data = part_search(speed_method, start_date)
+        from codes.part_search import part_search, load_data
+        data, pattern, target, col = load_data(start_date)
+        tops = part_search(pattern, target, col)
 
     top1 = tops.iloc[0]
 
@@ -42,7 +35,7 @@ def get_daily_action(start_date):
 
     print('##############################################')
     print('Date: ' + str(start_date.date()))
-    print('Predict Ratio:', income_ratio, str(top1.values))
+    print('Predict Ratio:', income_ratio)
     print('Actual  Ratio:', act_income_ratio)
     return action, income_ratio, act_income_ratio
 

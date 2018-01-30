@@ -9,10 +9,21 @@ import numpy as np
 def merge_raw_data():
     print('merge raw data...')
     col = ['CODE', 'DATE', 'OPEN', 'HIGH', 'LOW', 'CLOSE', 'VOLUME']
-    mergeed_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
-    mergeed_csv = mergeed_csv.drop_duplicates()
-    mergeed_csv.to_csv("../data/data.csv", index=False)
+    merged_csv = pd.concat([pd.read_csv(path.join(RAW_DATA_DIR, f), header=None, names=col) for f in listdir(RAW_DATA_DIR)], axis=0)
+    merged_csv = merged_csv.drop_duplicates()
+    merged_csv.to_csv(DATA, index=False)
+    merged_csv = pd.read_csv(DATA, parse_dates=['DATE'])
+    merged_csv = merged_csv.sort_values(ascending=True, by=['CODE', 'DATE'])
+    merged_csv.to_csv(DATA, index=False)
 
+# 从所有数据中取出ZH800数据
+def gen_800_data():
+    codes = pd.read_csv(ZZ800_CODES)
+    data = pd.read_csv(DATA)
+    data = data[data['CODE'].isin(codes.values)]
+    data.to_csv(ZZ800_DATA, index=False)
+
+# 尤教授建议的
 def gen_800_nav_std_data():
     print('pre process 800 wave std data...')
 
@@ -32,19 +43,7 @@ def gen_800_nav_std_data():
 def gen_800_wave_std_data():
     print('pre process 800 wave std data...')
     def rolling_aply(data):
-        if WAVE == True:
-            data_ = preprocessing.scale(data)
-            coeff = pywt.wavedec(data_, 'db4', mode='sym', level=2)
-            for i in range(3):
-                cD = coeff[i]
-                if i not in [0]:
-                    for j in range(len(cD)):
-                        coeff[i][j] = 0
-            denoised_close = pywt.waverec(coeff, 'db4')
-        else:
-            denoised_close = data
-
-        std = np.std(denoised_close, axis=0)
+        std = np.std(data, axis=0)
         return std
 
     def apply(data):
@@ -55,43 +54,56 @@ def gen_800_wave_std_data():
     data['std'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
     data.to_csv(ZZ800_STD_DATA, index=False)
 
-def gen_800_fft_date():
+# 3级傅里叶变换结果
+def gen_800_fft_data(org_data=ZZ800_DATA, det_data=ZZ800_FFT_DATA, col='CLOSE'):
     print('pre process 800 fft data...')
 
-    def rolling_aply_fft(data, freq):
+    def rolling_aply_fft(data, freq, method):
         data_ = preprocessing.scale(data)
         ffts = np.fft.fft(data_)/len(data_)
-        fft = np.abs(ffts[freq])
-        return fft
+        if method == 'fft':
+            return np.abs(ffts[freq])
+        else:
+            return np.rad2deg(np.angle(ffts[freq]))
 
-    def rolling_aply_deg(data, freq):
-        data_ = preprocessing.scale(data)
-        ffts = np.fft.fft(data_)/len(data_)
-        deg = np.rad2deg(np.angle(ffts[freq]))
-        return deg
-
-    def apply(data, rolling_aply, freq):
-        result = data.rolling(window=pattern_length).apply(func=rolling_aply, args=(freq,))
+    def apply(data, rolling_aply, freq, method):
+        result = data.rolling(window=pattern_length).apply(func=rolling_aply, args=(freq, method,))
         return result
 
-    data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'])
+    data = pd.read_csv(org_data, parse_dates=['DATE'])
 
-    data['fft1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1)
-    data['deg1'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=1)
-    data['fft2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2)
-    data['deg2'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=2)
+    data['fft1'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1, method='fft')
+    data['deg1'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=1, method='deg')
+    data['fft2'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2, method='fft')
+    data['deg2'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=2, method='deg')
+    data['fft3'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=3, method='fft')
+    data['deg3'] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=3, method='deg')
 
-    # data = pd.read_csv(ZZ800_FFT_DATA, parse_dates=['DATE'])
-    data['fft3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=3)
-    data['deg3'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_deg, freq=3)
+    data.to_csv(det_data, index=False)
 
-    data.to_csv(ZZ800_FFT_DATA, index=False)
+# 用小波变换给CLOSE降噪，并生成3级傅里叶变换结果
+def gen_800_wave_fft_data(level):
+    print('gen_800_wave_denoise_data...')
+    level = 2
+    def apply(data):
+        coeff = pywt.wavedec(data, 'db4', mode='sym', level=level)
+        for i in range(0, level + 1):
+            cD = coeff[i]
+            if i in [0, level]:
+                for j in range(len(cD)):
+                    coeff[i][j] = 0
+        waverec = pywt.waverec(coeff, 'db4')
+        data_ = pd.Series(waverec[:-1], data.index)
+        return data_
 
-def gen_800_data():
-    codes = pd.read_csv(ZZ800_CODES)
-    data = pd.read_csv(DATA)
-    data = data[data['CODE'].isin(codes.values)]
-    data.to_csv(ZZ800_DATA, index=False)
+    data = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    data['denoise_CLOSE'] = data.groupby(['CODE'])['CLOSE'].apply(func=apply)
+
+    # 生成降噪后的数据
+    data.to_csv(ZZ800_WAVE_DATA, index=False)
+
+    # 用降噪后的数据生成3级傅里叶
+    gen_800_fft_data(org_data=ZZ800_WAVE_DATA, det_data=ZZ800_WAVE_FFT_DATA, col='denoise_CLOSE')
 
 def norm(X):
     result = preprocessing.scale(X)
@@ -136,7 +148,7 @@ def plot_simi_stock(top, data, pattern, filename):
         assert a == b, 'calcu error!'
 
     # 绘图
-    line_styles = ['k--', 'k:', 'k-.']
+    line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
         plot_prices[i] = norm(plot_prices[i])
         if i == plot_codes.size - 1:
@@ -175,6 +187,8 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
 if __name__ == '__main__':
     merge_raw_data()
     gen_800_data()
-    gen_800_fft_date()
-    gen_800_nav_std_data()
-    gen_800_wave_std_data()
+    # gen_800_fft_data()
+    # gen_800_nav_std_data()
+    # gen_800_wave_std_data()
+
+    gen_800_wave_fft_data(level=2)

@@ -3,9 +3,9 @@ from scipy.spatial import distance
 from scipy.stats.stats import pearsonr
 
 from codes.base import norm, plot_simi_stock
-from codes.market import load_all_data
 
 count = 0
+data_set = None
 
 def t_rol_aply(target, pattern):
     global ascending_sort
@@ -43,6 +43,13 @@ def find_tops_similar(pattern, targets):
     tops[similarity_method] = result[similarity_method]
 
     return tops
+
+def load_all_data():
+    global data_set
+    if data_set is None:
+        print('load data from disk....')
+        data_set = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    return data_set
 
 def load_and_process_data(start_date, date=None):
     """
