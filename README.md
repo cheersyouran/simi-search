@@ -6,6 +6,7 @@
 3. [基于欧几里得距离和小波变换的快速查找结果](#3-基于欧几里得距离和小波变换的快速查找结果)
 4. [基于欧几里得距离和1级快速傅里叶变换的快速查找结果](#4-基于欧几里得距离和1级快速傅里叶变换的快速查找结果)
 5. [基于欧几里得距离和3级快速傅里叶变换的快速查找结果](#5-基于欧几里得距离和3级快速傅里叶变换的快速查找结果)
+6. [基于欧几里得距离和3级快速傅里叶变换的回归测试](#6-基于欧几里得距离和3级快速傅里叶变换的回归测试)
 
 ---
 
@@ -65,4 +66,13 @@
 **[查询时间]:** 20s
 
 <img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-part-fft-3.jpg" width = "60%" height = "60%" alt="2" align=center />
+
 ------
+### 6-基于欧几里得距离和3级快速傅里叶变换的回归测试
+
+**[查找股票]:** 000001.SZ   
+**[起止时间]:** 2017-02-024 至 250个交易日   
+**[查找数据集]:** 中证800五年的日行情数据  
+**[快速查找方法]:** 基于快速傅里叶变换的预处理-3级  
+
+<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/RegressionTest(250D)-000001.SZ-30-201702024-euclidean-part-fft.jpg" width = "60%" height = "60%" alt="2" align=center />
