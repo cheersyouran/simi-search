@@ -2,7 +2,7 @@ import pandas as pd
 import time
 import numpy as np
 from datetime import timedelta
-pd.set_option('display.width', 1000)
+pd.set_option('display.width', 1200)
 
 RAW_DATA_DIR = '../raw_data'
 DATA = '../data/data.csv'
@@ -15,8 +15,8 @@ ZZ800_WAVE_FFT_DATA = '../data/800_wave_fft_data.csv'
 ZZ800_VALUE_RATIO_FFT_DATA = '../data/800_value_ratio_fft_data.csv' # 尤老师方法
 
 # 'fft_euclidean', 'wave_fft_euclidean' ,'value_ratio_fft_euclidean'
-speed_method = 'value_ratio_fft_euclidean'
-# speed_method = 'fft_euclidean'
+# speed_method = 'value_ratio_fft_euclidean'
+speed_method = 'fft_euclidean'
 
 code = '000001.SZ' # 被搜索股票的code
 

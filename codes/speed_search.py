@@ -9,10 +9,10 @@ def speed_search(pattern, targets, col='CLOSE'):
     # 舍弃0值
     # std_data = std_data[(std_data['CLOSE'] != 0)].any().reset_index()
     if speed_method in ['fft_euclidean', 'wave_fft_euclidean', 'fft']:
-        ALPHA = np.multiply([1, 1, 1], 1)
-        BETA = np.multiply([1, 1, 1], 100)
+        ALPHA = np.multiply([1, 1, 1], 100)
+        BETA = np.multiply([1, 1, 1], 1)
     elif speed_method in ['value_ratio_fft_euclidean']:
-        ALPHA = np.multiply([1, 1, 1], 5000)
+        ALPHA = np.multiply([2, 1.5, 1], 20000)
         BETA = np.multiply([1, 1, 1], 1)
 
     targets['fft_deg'] = 0
@@ -27,6 +27,11 @@ def speed_search(pattern, targets, col='CLOSE'):
         targets['fft_deg'] += targets['fft_' + index] + targets['deg_' + index]
 
     sorted_std_diff = targets.sort_values(ascending=True, by=['fft_deg'])
+
+    sorted_std_diff = sorted_std_diff[sorted_std_diff['VOLUME'] != '0.0000']
+    sorted_std_diff = sorted_std_diff[sorted_std_diff['VOLUME'] != 0]
+    sorted_std_diff = sorted_std_diff[sorted_std_diff['VOLUME'] != '0']
+
     sorted_std_diff = sorted_std_diff.head(200)
 
     sorted_std_diff[similarity_method] = -1
@@ -37,10 +42,12 @@ def speed_search(pattern, targets, col='CLOSE'):
         sorted_std_diff.loc[i, similarity_method] = distance.euclidean(norm(result[col]), norm(pattern[col]))
         # sorted_std_diff.loc[i, similarity_method] = pearsonr(result['CLOSE'], pattern['CLOSE'])[0]
 
+    print(sorted_std_diff.iloc[:10, 7:])
+
     tops = sorted_std_diff.sort_values(ascending=True, by=[similarity_method]).head(nb_similarity)
 
-    print(tops.iloc[:, 8:])
-    print(pattern.iloc[-1, 8:])
+    print(tops.iloc[:, 7:])
+    print(pattern.iloc[-1, 7:])
 
     return tops
 

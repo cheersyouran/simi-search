@@ -175,15 +175,15 @@ def plot_simi_stock(top, data, pattern, filename):
     print(norm_plot_prices)
 
     # 验证结果
-    from codes import all_search
+    from codes.all_search import t_rol_aply
     for i in range(nb_similarity):
-        a = all_search.t_rol_aply(plot_prices[i], plot_prices[-1])
-        b = top[top['CODE'] == plot_codes[i]][similarity_method].values
+        a = t_rol_aply(plot_prices[i], plot_prices[-1])
+        b = top.iloc[i][similarity_method]
         print(a, b)
         assert a == b, 'calcu error!'
 
     # 绘图
-    line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.']
+    line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.', 'k:', 'k-.', 'k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
         if i == plot_codes.size - 1:
             plt.plot(norm_plot_prices[i], 'r-', label=norm_plot_prices[i], linewidth=1.5)
