@@ -1,7 +1,7 @@
 from codes.config import *
 from scipy.spatial import distance
 from scipy.stats.stats import pearsonr
-
+from codes.market import get_historical_data
 from codes.base import norm, plot_simi_stock
 
 count = 0
@@ -25,7 +25,7 @@ def target_apply(target, pattern):
     count = count + 1
     return result
 
-def find_tops_similar(pattern, targets):
+def all_search(pattern, targets):
 
     """
     :return is dataframe of the tops similar stock(s).
@@ -44,41 +44,11 @@ def find_tops_similar(pattern, targets):
 
     return tops
 
-def load_all_data():
-    global data_set
-    if data_set is None:
-        print('load data from disk....')
-        data_set = pd.read_csv(ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
-    return data_set
-
-def load_and_process_data(start_date, date=None):
-    """
-    :param start_date: give a specific date to down-scope Pattern.(包含这一天，即预测下一天)
-    :param date: give a specific date to down-scope Targets
-    :param nb_data: if == 0, then use whole all_data.
-    :return: all_data, pattern, targets
-    """
-
-    all_data = load_all_data()
-    all_data = all_data.loc[(all_data != 0).any(axis=1)]
-
-    pattern = all_data[all_data['CODE'] == code].reset_index(drop=True)
-    pattern = pattern[(pattern['DATE'] >= start_date)].head(pattern_length)
-
-    targets = all_data[all_data['CODE'] != code].reset_index(drop=True)
-    if nb_data != 0:
-        targets = targets.head(nb_data)
-
-    if date is not None:
-        targets = targets[target['DATE'] >= date]
-
-    return all_data, pattern, targets
-
 if __name__ == '__main__':
     time_start = time.time()
 
-    data, pattern, target = load_and_process_data(start_date)
-    tops = find_tops_similar(pattern, target)
+    data, pattern, target = get_historical_data(start_date=start_date)
+    tops = all_search(pattern, target)
     plot_simi_stock(tops, data, pattern, 'all_simi_search')
 
     time_end = time.time()

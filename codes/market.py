@@ -1,19 +1,62 @@
 from codes.config import *
 from codes.base import plot_nav_curve
 
-# 加载数据
+all_data = None
+
+def get_historical_data(start_date=None, end_date=None, speed_method=speed_method, code=code, data=None):
+
+    """
+    :param speed_method: 'fft_euclidean', 'wave_fft_euclidean' ,'value_ratio_fft_euclidean'or others
+    :param start_date: give a specific date to down-scope Pattern.(包含这一天，即预测下一天)
+    :param end_date: give a specific date to up-scope Pattern.
+    :return: all_data, pattern, targets
+    """
+
+    if speed_method == 'fft_euclidean':
+        file = ZZ800_FFT_DATA
+        col = 'CLOSE'
+    elif speed_method == 'wave_fft_euclidean':
+        file = ZZ800_WAVE_FFT_DATA
+        col = 'denoise_CLOSE'
+    elif speed_method == 'value_ratio_fft_euclidean':
+        file = ZZ800_VALUE_RATIO_FFT_DATA
+        col = 'CLOSE'
+
+    global all_data
+    if all_data is None:
+        all_data = pd.read_csv(file, parse_dates=['DATE'])
+
+    if data != None:
+        all_data = data
+
+    all_data = all_data.loc[(all_data != 0).any(axis=1)]
+    targets = all_data[all_data['CODE'] != code].reset_index(drop=True)
+
+    if start_date == None and end_date != None:
+        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date)].tail(pattern_length)
+    elif start_date != None and end_date == None:
+        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
+    elif start_date != None and end_date != None:
+        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
+
+    pattern = pattern.reset_index(drop=True)
+
+    if nb_data != 0:
+        targets = targets.head(nb_data)
+
+    return all_data, pattern, targets, col
 
 # 获取每日的操作
 def get_daily_action(start_date):
 
     if speed_method == None:
-        from codes.all_search import load_and_process_data, find_tops_similar
+        from codes.all_search import load_and_process_data, all_search
         data, pattern, target = load_and_process_data(start_date)
-        tops = find_tops_similar(pattern, target, nb_similarity)
+        tops = all_search(pattern, target, nb_similarity)
     else:
-        from codes.part_search import part_search, load_data
-        data, pattern, target, col = load_data(start_date)
-        tops = part_search(pattern, target, col)
+        from codes.speed_search import speed_search
+        data, pattern, target, col = get_historical_data(start_date=start_date)
+        tops = speed_search(pattern, target, col)
 
     top1 = tops.iloc[0]
 

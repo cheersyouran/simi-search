@@ -1,78 +1,44 @@
 # Stock History Similarity Search
 
 ## 目录
-1. [基于欧几里得距离的查找结果](#1-基于欧几里得距离的查找结果)
-2. [基于欧几里得距离和标准差的快速查找结果](#2-基于欧几里得距离和标准差的快速查找结果)
-3. [基于欧几里得距离和小波变换的快速查找结果](#3-基于欧几里得距离和小波变换的快速查找结果)
-4. [基于欧几里得距离和1级快速傅里叶变换的快速查找结果](#4-基于欧几里得距离和1级快速傅里叶变换的快速查找结果)
-5. [基于欧几里得距离和3级快速傅里叶变换的快速查找结果](#5-基于欧几里得距离和3级快速傅里叶变换的快速查找结果)
-6. [基于欧几里得距离和3级快速傅里叶变换的回归测试](#6-基于欧几里得距离和3级快速傅里叶变换的回归测试)
+1. [全局查找](#1-全局查找)
+2. [3级快速傅里叶变换的快速查找](#2-3级快速傅里叶变换的快速查找)
+3. [3级快速傅里叶变换的回归测试](#3-3级快速傅里叶变换的回归测试)
+4. [小波降噪及3级快速傅里叶变换的快速查找](#4-基于欧式距离和3级快速傅里叶变换的回归测试)
+5. [小波降噪及3级快速傅里叶变换的回归测试](#5-基于欧式距离和3级快速傅里叶变换的回归测试)
 
 ---
 
-### 1-基于欧几里得距离的查找结果
+### 1-全局查找
 
 **[查找股票]:**  000001.SZ    
-**[起止时间]:** 2016-01-01 至 30个交易日    
-**[查找数据集]:** 中证800五年的日行情数据    
+**[起止时间]:** 2016-01-01 起 30个交易日    
+**[数据集]:** 中证800五年的日行情数据
+**[预处理方式]:** 数据标准化 
+**[相似衡量]：** 欧氏距离
 **[查询时间]:** 662s
 
 <img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-all.jpg" width = "60%" height = "60%" alt="1" align=center />
 
 ---
 
-### 2-基于欧几里得距离和标准差的快速查找结果
+### 2-3级快速傅里叶变换的快速查找
 
 **[查找股票]:** 000001.SZ   
-**[起止时间]:** 2016-01-01 至 30个交易日   
-**[查找数据集]:** 中证800五年的日行情数据 (head 1000)    
-**[快速查找方法]:** 基于标准差的预处理   
-**[查询时间]:** 90s
-
-<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-part.jpg" width = "60%" height = "60%" alt="2" align=center />
-
----
-
-### 3-基于欧几里得距离和小波变换的快速查找结果
-
-**[查找股票]:** 000001.SZ   
-**[起止时间]:** 2016-01-01 至 30个交易日   
-**[查找数据集]:** 中证800五年的日行情数据 (head 1000)    
-**[快速查找方法]:** 基于小波变换的预处理    
-**[查询时间]:** 90s
-
-<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-part-wavelet.jpg" width = "60%" height = "60%" alt="2" align=center />
-
----
-
-### 4-基于欧几里得距离和1级快速傅里叶变换的快速查找结果
-
-**[查找股票]:** 000001.SZ   
-**[起止时间]:** 2016-01-01 至 30个交易日   
-**[查找数据集]:** 中证800五年的日行情数据 (head 500)   
-**[快速查找方法]:** 基于快速傅里叶变换的预处理-1级    
-**[查询时间]:** 45s
-
-<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-part-fft.jpg" width = "60%" height = "60%" alt="2" align=center />
-
----
-
-### 5-基于欧几里得距离和3级快速傅里叶变换的快速查找结果
-
-**[查找股票]:** 000001.SZ   
-**[起止时间]:** 2016-01-01 至 30个交易日   
-**[查找数据集]:** 中证800五年的日行情数据 (head 200)   
-**[快速查找方法]:** 基于快速傅里叶变换的预处理-3级    
+**[起止时间]:** 2016-01-01 起 30个交易日   
+**[数据集]:** 中证800五年的日行情数据   
+**[预处理方式]:** 3级快速傅里叶变换
+**[相似衡量]：** 欧氏距离
 **[查询时间]:** 20s
 
-<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-part-fft-3.jpg" width = "60%" height = "60%" alt="2" align=center />
+<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/000001.SZ-30-20160101-euclidean-speed-fft3.jpg" width = "60%" height = "60%" alt="2" align=center />
 
 ------
-### 6-基于欧几里得距离和3级快速傅里叶变换的回归测试
+### 3-3级快速傅里叶变换的回归测试
 
 **[查找股票]:** 000001.SZ   
 **[起止时间]:** 2017-02-024 至 250个交易日   
 **[查找数据集]:** 中证800五年的日行情数据  
-**[快速查找方法]:** 基于快速傅里叶变换的预处理-3级  
+**[相似衡量]：** 欧氏距离  
 
-<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/RegressionTest(250D)-000001.SZ-30-201702024-euclidean-part-fft.jpg" width = "60%" height = "60%" alt="2" align=center />
+<img src="https://raw.githubusercontent.com/cheersyouran/simi-search/master/pic/RegressionTest(250D)-000001.SZ-30-201702024-euclidean-speed-fft3.jpg" width = "60%" height = "60%" alt="2" align=center />
