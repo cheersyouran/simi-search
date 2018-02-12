@@ -1,8 +1,8 @@
 from codes.config import *
 from scipy.spatial import distance
 from scipy.stats.stats import pearsonr
-from codes.market import get_historical_data
 from codes.base import norm, plot_simi_stock, weighted_distance
+from codes.market import Market
 import pandas as pd
 import time
 
@@ -48,8 +48,8 @@ def all_search(pattern, targets):
 
 if __name__ == '__main__':
     time_start = time.time()
-
-    data, pattern, target = get_historical_data(start_date=config.start_date)
+    market = Market()
+    data, pattern, target = market.get_historical_data(start_date=config.start_date)
     tops = all_search(pattern, target)
     plot_simi_stock(tops, data, pattern, 'all_simi_search')
 

@@ -1,12 +1,9 @@
 #encoding:utf-8
-from os import listdir, path
-
 import matplotlib.pyplot as plt
-import numpy as np
 import pywt
+from os import listdir, path
 from scipy.spatial.distance import euclidean
 from sklearn import preprocessing
-
 from codes.config import *
 
 def weighted_distance(x, y, length):
@@ -34,7 +31,10 @@ def merge_raw_data():
     merged_csv = merged_csv.sort_values(ascending=True, by=['CODE', 'DATE'])
     merged_csv.to_csv(config.DATA, index=False)
 
-# 从所有数据中取出ZH800数据
+def gen_trading_days():
+    df = pd.read_csv(config.ZZ800_DATA)
+    pd.DataFrame(df['DATE'].unique()).to_csv(config.ZZ800_TRAINING_DAY, index=False)
+
 def gen_800_data():
     print('gen 800 data...')
     codes = pd.read_csv(config.ZZ800_CODES)
@@ -58,13 +58,13 @@ def gen_800_fft_data(col='CLOSE'):
         result = data.rolling(window=config.pattern_length).apply(func=rolling_aply, args=(freq, method,))
         return result
 
-    # data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'])
-    if config.speed_method == 'fft_euclidean':
-        data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'])
-    else:
-        data = pd.read_csv(config.ZZ800_VALUE_RATIO_FFT_DATA, parse_dates=['DATE'])
+    data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'])
+    # if config.speed_method == 'fft_euclidean':
+    #     data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'])
+    # else:
+    #     data = pd.read_csv(config.ZZ800_VALUE_RATIO_FFT_DATA, parse_dates=['DATE'])
 
-    for i in range(4,5):
+    for i in range(config.fft_level):
         ind = str(i+1)
         data['fft'+ind] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')
         data['deg'+ind] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')
@@ -103,10 +103,10 @@ def gen_800_wave_fft_data(level, col='denoise_CLOSE'):
         data['deg' + ind] = data.groupby(['CODE'])[col].apply(func=apply, rolling_aply=gen_800_fft_data.rolling_aply_fft, freq=i, method='deg')
     data.to_csv(config.ZZ800_WAVE_FFT_DATA, index=False)
 
-def plot_simi_stock(top, data, pattern, filename):
-    print('plot simi stock...')
+def plot_simi_stock(top, data, pattern, filename, codes=config.code):
+    print('plot simi stock of ', codes, ' ...')
     def init_plot_data():
-        plot_codes = np.append(top['CODE'].values, config.code)
+        plot_codes = np.append(top['CODE'].values, codes)
         plot_dates = list(top['DATE'].values)
         plot_dates.append(None)
         plot_prices = np.zeros([config.nb_similarity + 1, config.pattern_length])
@@ -137,12 +137,12 @@ def plot_simi_stock(top, data, pattern, filename):
     # print(norm_plot_prices)
 
     # 验证结果
-    from codes.search.all_search import t_rol_aply
+    from codes.all_search import t_rol_aply
     if config.speed_method not in ['changed']:
         for i in range(config.nb_similarity):
             a = t_rol_aply(plot_prices[i], plot_prices[-1])
             b = top.iloc[i][config.similarity_method]
-            print(a, b)
+            # print(a, b)
             assert a == b, 'calcu error!'
 
     # 绘图
@@ -167,8 +167,8 @@ def plot_simi_stock(top, data, pattern, filename):
     plt.savefig('../pic/' + filename+'.jpg')
     plt.close()
 
-def plot_nav_curve(strategy_net_value, act_net_value, dates):
-    print('plot nav curve...')
+def plot_nav_curve(strategy_net_value, act_net_value, dates, name):
+    print('\nplot nav curve...')
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
     plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
 
@@ -177,11 +177,11 @@ def plot_nav_curve(strategy_net_value, act_net_value, dates):
     plt.legend(['strategy', 'baseline'], loc='upper left')
     plt.title("Net Asset Value")
     plt.grid(True)
-    plt.xticks(fontsize=8, rotation=45)
+    plt.xticks(fontsize=8, rotation=20)
     plt.xticks(fontsize=8)
     plt.ioff()
     # plt.show()
-    plt.savefig('../pic/' + 'regression_result.jpg')
+    plt.savefig('../pic/' + name)
     plt.close()
 
 def compare_plot(x1, x2):
@@ -192,12 +192,13 @@ def compare_plot(x1, x2):
     plt.savefig('../pic/' + 'compare_result.jpg')
     plt.close()
 
-
 if __name__ == '__main__':
     # merge_raw_data()
     # gen_800_data()
-    config.speed_method = 'fft_euclidean'
-    gen_800_fft_data()
+    gen_trading_days()
+
+    # config.speed_method = 'fft_euclidean'
+    # gen_800_fft_data()
 
     # config.speed_method = 'value_ratio_fft_euclidean'
     # gen_800_fft_data()

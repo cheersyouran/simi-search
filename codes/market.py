@@ -1,179 +1,103 @@
-from datetime import timedelta
+from codes.config import config
+import os
+import pandas as pd
 
-from codes.base import plot_nav_curve
-from codes.config import *
+class Market:
+    __instance = None
+    def __new__(cls, *args, **kwargs):
+        if cls.__instance is None:
+            cls.__instance = object.__new__(cls, *args, **kwargs)
+        return cls.__instance
 
-all_data = None
+    def __init__(self):
+        self.all_data = None
+        self._init_all_data(config.speed_method)
 
-def get_historical_data(start_date=None, end_date=None, speed_method=config.speed_method,
-                        code=config.code, data=None, pattern_length=config.pattern_length):
+        self.codes = None
+        self._init_codes()
 
-    """
-    :param speed_method: 'fft_euclidean', 'wave_fft_euclidean' ,'value_ratio_fft_euclidean'or others
-    :param start_date: give a specific date to down-scope Pattern.(包含这一天，即预测下一天)
-    :param end_date: give a specific date to up-scope Pattern.
-    :return: all_data, pattern, targets
-    """
+        self.ratios = None
+        self._init_ratios()
 
-    if speed_method == 'fft_euclidean':
-        file = config.ZZ800_FFT_DATA
-        col = 'CLOSE'
-    elif speed_method == 'wave_fft_euclidean':
-        file = config.ZZ800_WAVE_FFT_DATA
-        col = 'denoise_CLOSE'
-    elif speed_method == 'value_ratio_fft_euclidean':
-        file = config.ZZ800_VALUE_RATIO_FFT_DATA
-        col = 'CLOSE'
+        self.trading_days = None
+        self._init_trading_days()
 
-    global all_data
-    if all_data is None:
-        all_data = pd.read_csv(file, parse_dates=['DATE'])
+        self.pattern = None
+        self.targets = None
+        self.current_date = self.pass_days(config.start_date, config.pattern_length)
+        self.col = 'CLOSE'
 
-    if data != None:
-        all_data = data
+    def _init_all_data(self, speed_method=config.speed_method):
 
-    all_data = all_data.loc[(all_data != 0).any(axis=1)]
-    targets = all_data[all_data['CODE'] != code].reset_index(drop=True)
+        if speed_method == 'fft_euclidean':
+            file = config.ZZ800_FFT_DATA
+        elif speed_method == 'wave_fft_euclidean':
+            file = config.ZZ800_WAVE_FFT_DATA
+            self.col = 'denoise_CLOSE'
+        elif speed_method == 'value_ratio_fft_euclidean':
+            file = config.ZZ800_VALUE_RATIO_FFT_DATA
 
-    if start_date == None and end_date != None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date)].tail(pattern_length)
-    elif start_date != None and end_date == None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
-    elif start_date != None and end_date != None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
+        if self.all_data is None:
+            print('Init all data! ', os.getpid())
+            self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
-    pattern = pattern.reset_index(drop=True)
+    def _init_ratios(self):
+        self.ratios = pd.read_csv('../data/800_ratio.csv', parse_dates=['DATE'])
 
-    if config.nb_data != 0:
-        targets = targets.head(config.nb_data)
+    def _init_codes(self):
+        self.codes = pd.read_csv(config.ZZ800_CODES).head(config.nb_codes).values.flatten()
 
-    return all_data, pattern, targets, col
+    def _init_trading_days(self):
+        self.trading_days = pd.read_csv(config.ZZ800_TRAINING_DAY, parse_dates=['DATE'])
 
-def get_data(start_date=None, end_date=None, speed_method=config.speed_method,
-                        code=config.code, data=None, pattern_length=config.pattern_length):
+    def _pass_a_day(self):
+        self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
+        config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(1).values[0][0])
 
-    if speed_method == 'fft_euclidean':
-        file = config.ZZ800_FFT_DATA
-    elif speed_method == 'wave_fft_euclidean':
-        file = config.ZZ800_WAVE_FFT_DATA
-    elif speed_method == 'value_ratio_fft_euclidean':
-        file = config.ZZ800_VALUE_RATIO_FFT_DATA
+    # 更新pattern, targets
+    def get_historical_data(self, start_date=None, end_date=None, speed_method=config.speed_method, code=config.code):
 
-    global all_data
-    if all_data is None:
-        all_data = pd.read_csv(file, parse_dates=['DATE'])
+        self.targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
 
-    if data != None:
-        all_data = data
+        if start_date == None and end_date != None:
+            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)
+        elif start_date != None and end_date == None:
+            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] >= start_date)].head(config.pattern_length)
+        elif start_date != None and end_date != None:
+            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date) & (self.all_data['DATE'] >= start_date)]
 
-    if start_date == None and end_date != None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date)].tail(pattern_length)
-    elif start_date != None and end_date == None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
-    elif start_date != None and end_date != None:
-        pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
+        self.pattern = self.pattern.reset_index(drop=True)
 
-    pattern = pattern.reset_index(drop=True)
+        if config.nb_data != 0:
+            self.targets = self.targets.head(config.nb_data)
 
-    return all_data, pattern,
+        return self.all_data, self.pattern, self.targets, self.col
 
-# 获取每日的操作
-def get_daily_action(start_date):
+    def get_data(self, start_date=None, end_date=None, code=None, pattern_length=config.pattern_length):
 
-    if config.speed_method == None:
-        from codes.search.all_search import all_search
-        data, pattern, target, col = get_historical_data(start_date=start_date)
-        tops = all_search(pattern, target, config.nb_similarity)
-    else:
-        from codes.search.speed_search import speed_search
-        data, pattern, target, col = get_historical_data(start_date=start_date)
-        tops = speed_search(pattern, target, col)
+        all_data = self.all_data
 
-    top1 = tops.iloc[0]
-
-    # 预测值
-    pred = data[(data['CODE'] == top1['CODE']) & (data['DATE'] >= top1['DATE'])].head(2)
-    income_ratio = (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
-
-    # 实际值
-    act = data[(data['CODE'] == config.code) & (data['DATE'] >= start_date)].head(config.pattern_length + 1).tail(2)
-    act_income_ratio = (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE']
-
-    # 根据income_ratio来做决策
-    if income_ratio > 0:
-        action = 1
-    elif income_ratio < 0:
-        action = -1
-    else:
-        action = 0
-
-    print('##############################################')
-    print('Date: ' + str(start_date.date()))
-    print('Predict Ratio:', income_ratio)
-    print('Actual  Ratio:', act_income_ratio)
-    return action, income_ratio, act_income_ratio
-
-def get_recent_weekdays(date):
-    dayofweek = date.weekday_name
-    if dayofweek not in ['Saturday', 'Sunday']:
-        return date
-    else:
-        while dayofweek not in ['Saturday', 'Sunday']:
-            date = date + timedelta(days=1)
-            dayofweek = date.weekday_name
-    return date
-
-def get_next_weekdays(date):
-    date_ = date + timedelta(days=1)
-    dayofweek = date_.weekday_name
-    if dayofweek not in ['Saturday', 'Sunday']:
-        return date_
-    else:
-        while dayofweek in ['Saturday', 'Sunday']:
-            date_ = date_ + timedelta(days=1)
-            dayofweek = date_.weekday_name
-    return date_
-
-def pass_a_day(date):
-    date_ = get_recent_weekdays(date)
-    date_ = get_next_weekdays(date_)
-    return date_
-
-def regression_test(start_date, end_date):
-    state = 0 # 当前持股状态，0未持股，1持股
-    date = start_date
-    strategy_net_value = [1.0]
-    act_net_value = [1.0]
-    dates = [date]
-    while date <= end_date:
-
-        action, strategy_income_ratio, act_income_ratio = get_daily_action(date, )
-        if (state == 0) & (action == 1):
-            print('[Action]: Buy in!')
-            state = 1
-            strategy_net_value.append(strategy_net_value[-1])
-        elif (state == 0) & (action != 1):
-            print('[Action]: Keep empty')
-            strategy_net_value.append(strategy_net_value[-1])
-        elif (state == 1) & (action == -1):
-            print('[Action]: Sold out')
-            state = 0
-            strategy_net_value.append(strategy_net_value[-1] * (1 + act_income_ratio))
-        elif (state == 1) & (action != -1):
-            print('[Action]: Keep full')
-            strategy_net_value.append(strategy_net_value[-1] * (1 + act_income_ratio))
+        if code is not None:
+            if start_date == None and end_date != None:
+                pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date)].tail(pattern_length)
+            elif start_date != None and end_date == None:
+                pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
+            elif start_date != None and end_date != None:
+                pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
         else:
-            raise Exception('No Such Combination! state:' + state + ', action:' + action)
+            if start_date == None and end_date != None:
+                pattern = all_data[(all_data['DATE'] <= end_date)].tail(pattern_length)
+            elif start_date != None and end_date == None:
+                pattern = all_data[(all_data['DATE'] >= start_date)].head(pattern_length)
+            elif start_date != None and end_date != None:
+                pattern = all_data[(all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
 
-        act_net_value.append(act_net_value[-1] * (1 + act_income_ratio))
+        pattern = pattern.reset_index(drop=True)
 
-        date = pass_a_day(date)
-        dates.append(date)
+        return pattern
 
-        plot_nav_curve(strategy_net_value, act_net_value, dates)
+    def pass_days(self, date, nb_day):
+        date_ = pd.to_datetime(self.trading_days[self.trading_days['DATE'] >= date].head(nb_day).tail(1).values[0][0])
+        return date_
 
-    return strategy_net_value, act_net_value, dates
-
-if __name__ == '__main__':
-    start_date = get_recent_weekdays(config.start_date)
-    pred_net_value, act_net_value, dates = regression_test(start_date, start_date + timedelta(days=config.regression_days))
+market = Market()
