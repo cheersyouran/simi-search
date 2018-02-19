@@ -70,7 +70,7 @@ def get_daily_action_parallel():
     top1s['pred_ratio'] = pred_ratios
     top1s['act_ratios'] = act_ratios
 
-    # top1s = top1s[top1s['pred_ratio'] > 0]
+    top1s = top1s[top1s['pred_ratio'] > 0]
     # top1s_df.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
 
     pred_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['pred_ratio']) * (1 / top1s.shape[0])

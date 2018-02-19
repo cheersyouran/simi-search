@@ -35,7 +35,7 @@ class Config:
         self.nb_codes = 4
 
         self.pattern_length = 30
-        self.regression_days = 250
+        self.regression_days = 30
         self.start_date = pd.to_datetime('2017-02-24')
         # self.start_date = pd.to_datetime('2016-01-01')
         self.end_date = self.start_date + timedelta(days=self.regression_days)
