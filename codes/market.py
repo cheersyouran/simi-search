@@ -57,6 +57,7 @@ class Market:
     def get_historical_data(self, start_date=None, end_date=None, speed_method=config.speed_method, code=config.code):
 
         self.targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
+        self.targets = self.targets[self.targets['DATE'] < '2017-12-29']
 
         if start_date == None and end_date != None:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)

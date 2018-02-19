@@ -32,12 +32,11 @@ class Config:
         self.ZZ800_TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
 
         self.code = '000001.SZ'
-        self.nb_codes = 4
+        self.nb_codes = 10
 
         self.pattern_length = 30
         self.regression_days = 30
         self.start_date = pd.to_datetime('2017-02-24')
-        # self.start_date = pd.to_datetime('2016-01-01')
         self.end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.parallel = True

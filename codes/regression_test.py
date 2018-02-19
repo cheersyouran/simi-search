@@ -28,6 +28,8 @@ def get_daily_action_serial():
 
     top1 = tops.iloc[0]
 
+    assert tops
+
     pred = market.get_data(start_date=top1['DATE'], code=top1['CODE']).head(2)
     pred_ratio = (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
@@ -96,7 +98,8 @@ def regression_test(func, name):
     dates = [market.current_date.date()]
     while config.start_date <= config.end_date:
 
-        print('\n[Current Date]: ' + str(market.current_date.date()))
+        print('\n[Start Date]: ' + str(config.start_date.date()))
+        print('[Current Date]: ' + str(market.current_date.date()))
 
         action, pred_ratio, act_ratio, market_ratios = func()
 
@@ -143,9 +146,9 @@ if __name__ == '__main__':
 
     if config.parallel:
         # queue = Manager().Queue()
-        regression_test(get_daily_action_parallel, 'parallel_regression_result.jpg')
+        regression_test(get_daily_action_parallel, 'parallel_regression_result.png')
     else:
-        regression_test(get_daily_action_serial, 'serial_regression_result.jpg')
+        regression_test(get_daily_action_serial, 'serial_regression_result.png')
 
     time_end = time.time()
     print('Total Time is:', time_end - time_start)
