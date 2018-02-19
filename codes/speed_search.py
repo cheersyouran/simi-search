@@ -65,4 +65,4 @@ if __name__ == '__main__':
 
     if config.speed_method not in ['value_ratio_fft_euclidean']:
         config.speed_method = 'changed'
-        plot_simi_stock(tops, all_data, pattern, '标准化-盈利率')
+        plot_simi_stock(tops, all_data, pattern, 'std_nav')
