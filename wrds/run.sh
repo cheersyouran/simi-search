@@ -12,6 +12,6 @@ RESULT_FILE=result_info.txt
 #    rm $RESULT_FILE
 #fi
 
-~/miniconda3/bin/python3 grid_research.py >> ./$RESULT_FILE
+~/miniconda3/bin/python3 ../codes/regression_test.py >> $RESULT_FILE
 
 echo "Finished job at `date`"

@@ -8,13 +8,14 @@ sys.path.append(rootPath)
 import time
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, Manager
 from codes.config import config
 from codes.speed_search import parallel_speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
-
 
 def get_daily_action_serial():
     all_data, pattern, target, col = market.get_historical_data(start_date=config.start_date)
@@ -100,6 +101,7 @@ def regression_test(func, name):
 
         print('\n[Start Date]: ' + str(config.start_date.date()))
         print('[Current Date]: ' + str(market.current_date.date()))
+        time_start = time.time()
 
         action, pred_ratio, act_ratio, market_ratios = func()
 
@@ -116,6 +118,9 @@ def regression_test(func, name):
         market._pass_a_day()
         dates.append(market.current_date.date())
         plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, name)
+
+        time_end = time.time()
+        print('Search Time:', time_end - time_start)
 
 def result_check(tops, name, pred_ratio, act_ratio):
     def compare_plot(x1, x2, name):

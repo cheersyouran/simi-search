@@ -1,4 +1,6 @@
 #encoding:utf-8
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import pywt
 from os import listdir, path
@@ -165,7 +167,7 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, name):
     print('\nplot nav curve...')
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
-    plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
+    # plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
     plt.plot(dates, market_net_value, 'g-', label=market_net_value, linewidth=1.5)
 
     plt.xlabel('Time')
