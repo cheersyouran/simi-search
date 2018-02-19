@@ -1,4 +1,10 @@
+import sys
 import os
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(curPath)
+sys.path.append(rootPath)
+
 import time
 import numpy as np
 import pandas as pd
@@ -8,6 +14,7 @@ from codes.config import config
 from codes.speed_search import parallel_speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
+
 
 def get_daily_action_serial():
     all_data, pattern, target, col = market.get_historical_data(start_date=config.start_date)
@@ -21,15 +28,12 @@ def get_daily_action_serial():
 
     top1 = tops.iloc[0]
 
-    # 预测值
     pred = market.get_data(start_date=top1['DATE'], code=top1['CODE']).head(2)
     pred_ratio = (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
-    # 实际值
     act = market.get_data(start_date=market.current_date, code=config.code).head(2)
     act_ratio = (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE']
 
-    # 大盘实际值
     market_ratio = float(market.ratios[market.ratios['DATE'] == pattern['DATE'].tail(1).values[0]]['ratio']) / 100
     result_check(tops, 'speed_' + config.code + '_' + str(market.current_date.date()), pred_ratio, act_ratio)
 
@@ -47,12 +51,11 @@ def get_daily_action_serial():
     return action, pred_ratio, act_ratio, market_ratio
 
 def get_daily_action_parallel():
-    # 找到所有序列 各自最相似的
+
     pool = Pool(processes=os.cpu_count())
     top1s = pool.map(parallel_speed_search, market.codes)
     top1s = pd.DataFrame(columns=['CODE', 'DATE', config.similarity_method, 'ORG_CODE'], data=top1s)
 
-    # 计算预测盈利和实际盈利
     pred_ratios = []
     act_ratios = []
     for _, top1 in top1s.iterrows():

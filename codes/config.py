@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import os
+import sys
 from datetime import timedelta
 
 pd.set_option('display.width', 1200)
@@ -17,16 +18,18 @@ class Config:
 
     def __init__(self):
         print('Init config!', os.getpid())
-        self.RAW_DATA_DIR = '../raw_data'
-        self.DATA = '../data/data.csv'
+        self.rootPath = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
 
-        self.ZZ800_CODES = '../data/800_codes.csv'
-        self.ZZ800_DATA = '../data/800_data.csv'
-        # self.ZZ800_WAVE_DATA = '../data/800_wave_data.csv'
-        self.ZZ800_FFT_DATA = '../data/800_fft_data.csv'
-        self.ZZ800_WAVE_FFT_DATA = '../data/800_wave_fft_data.csv'
-        self.ZZ800_VALUE_RATIO_FFT_DATA = '../data/800_value_ratio_fft_data.csv'  # 尤老师方法
-        self.ZZ800_TRAINING_DAY = '../data/800_training_day.csv'
+        self.RAW_DATA_DIR = self.rootPath + '/raw_data'
+        self.DATA = self.rootPath + '/data/data.csv'
+
+        self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
+        self.ZZ800_DATA = self.rootPath + '/data/800_data.csv'
+        # self.ZZ800_WAVE_DATA = self.rootPath + '/data/800_wave_data.csv'
+        self.ZZ800_FFT_DATA = self.rootPath + '/data/800_fft_data.csv'
+        self.ZZ800_WAVE_FFT_DATA = self.rootPath + '/data/800_wave_fft_data.csv'
+        self.ZZ800_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/800_value_ratio_fft_data.csv'
+        self.ZZ800_TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
 
         self.code = '000001.SZ'
         self.nb_codes = 4
@@ -42,11 +45,12 @@ class Config:
         self.fft_level = 3
         self.similarity_method = 'euclidean' #'pearsonr'
 
-        self.nb_similarity = 2  # 返回相似序列的数目
-        self.nb_to_make_action = 2 # 用于做action的codes的数目
-        self.nb_data = 0  # 若为0，则targets用全部数据集
+        self.nb_similarity = 2
+        self.nb_to_make_action = 2
+        self.nb_data = 0
 
         self.weighted_dist = True
+
 
 config = Config()
 

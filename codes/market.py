@@ -54,7 +54,6 @@ class Market:
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
         config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(1).values[0][0])
 
-    # 更新pattern, targets
     def get_historical_data(self, start_date=None, end_date=None, speed_method=config.speed_method, code=config.code):
 
         self.targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)

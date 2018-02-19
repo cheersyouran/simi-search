@@ -42,7 +42,6 @@ def gen_800_data():
     data = data[data['CODE'].isin(codes.values)]
     data.to_csv(config.ZZ800_DATA, index=False)
 
-# 3级傅里叶变换(norm 处理)
 def gen_800_fft_data(col='CLOSE'):
     print('gen 800 fft data...')
 
@@ -74,7 +73,6 @@ def gen_800_fft_data(col='CLOSE'):
     else:
         data.to_csv(config.ZZ800_VALUE_RATIO_FFT_DATA, index=False)
 
-# 先用小波变换给CLOSE降噪，再生成3级傅里叶变换结果
 def gen_800_wave_fft_data(level, col='denoise_CLOSE'):
     print('gen 800 wave denoise data...')
 
@@ -115,7 +113,6 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
 
     plot_codes, plot_dates, plot_prices, plot_legend = init_plot_data()
 
-    # 存储相似数据
     for i in range(config.nb_similarity):
         plot_quote = data[data['CODE'] == plot_codes[i]]
         plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(config.pattern_length)
@@ -124,7 +121,6 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
             str(plot_codes[i]) + "," + config.similarity_method + ":" +
             str(top.iloc[i][config.similarity_method]))
 
-    # 存储原数据
     plot_prices[-1] = pattern['CLOSE'].values
     plot_dates[-1] = pattern['DATE'].iloc[-1]
     plot_legend.append(str(plot_codes[-1]))
@@ -145,7 +141,6 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
             # print(a, b)
             assert a == b, 'calcu error!'
 
-    # 绘图
     line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.', 'k:', 'k-.', 'k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
         if i == plot_codes.size - 1:
