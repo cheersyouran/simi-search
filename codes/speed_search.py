@@ -44,6 +44,14 @@ def speed_search(pattern, targets, code=config.code, col='CLOSE'):
 
     return tops
 
+def parallel_speed_search(code):
+    all_data, pattern, targets, col = market.get_historical_data(start_date=config.start_date, code=code)
+    tops = speed_search(pattern, targets, code, col)
+    top1 = tops.head(1)[['CODE', 'DATE', config.similarity_method]].values.flatten()
+    top1 = np.hstack((top1, code))
+    # queue.put([tops, pattern, code])
+    return top1
+
 if __name__ == '__main__':
 
     time_start = time.time()

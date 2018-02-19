@@ -5,17 +5,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from multiprocessing import Pool, Manager
 from codes.config import config
-from codes.speed_search import speed_search
+from codes.speed_search import parallel_speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
-
-def map_search(code):
-    all_data, pattern, targets, col = market.get_historical_data(start_date=config.start_date, code=code)
-    tops = speed_search(pattern, targets, code, col)
-    top1 = tops.head(1)[['CODE', 'DATE', config.similarity_method]].values.flatten()
-    top1 = np.hstack((top1, code))
-    # queue.put([tops, pattern, code])
-    return top1
 
 def get_daily_action_serial():
     all_data, pattern, target, col = market.get_historical_data(start_date=config.start_date)
@@ -38,9 +30,9 @@ def get_daily_action_serial():
     act_ratio = (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE']
 
     # 大盘实际值
-    # act_ratio = float(market.ratios[market.ratios['DATE'] == pattern['DATE'].tail(1).values[0]]['ratio']) / 100
+    market_ratio = float(market.ratios[market.ratios['DATE'] == pattern['DATE'].tail(1).values[0]]['ratio']) / 100
     result_check(tops, 'speed_' + config.code + '_' + str(market.current_date.date()), pred_ratio, act_ratio)
-    # 根据income_ratio来做决策
+
     if pred_ratio > 0:
         action = 1
     elif pred_ratio < 0:
@@ -50,12 +42,14 @@ def get_daily_action_serial():
 
     print('[Predict]:', pred_ratio)
     print('[Actual ]:', act_ratio)
-    return action, pred_ratio, act_ratio
+    print('[Market ]:', market_ratio)
+
+    return action, pred_ratio, act_ratio, market_ratio
 
 def get_daily_action_parallel():
     # 找到所有序列 各自最相似的
     pool = Pool(processes=os.cpu_count())
-    top1s = pool.map(map_search, market.codes)
+    top1s = pool.map(parallel_speed_search, market.codes)
     top1s = pd.DataFrame(columns=['CODE', 'DATE', config.similarity_method, 'ORG_CODE'], data=top1s)
 
     # 计算预测盈利和实际盈利
@@ -78,7 +72,7 @@ def get_daily_action_parallel():
 
     pred_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['pred_ratio']) * (1 / top1s.shape[0])
     act_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['act_ratios']) * (1 / top1s.shape[0])
-    # act_ratio = float(market.ratios[market.ratios['DATE'] == pattern['DATE'].tail(1).values[0]]['ratio']) / 100
+    market_ratio = float(market.ratios[market.ratios['DATE'] == market.current_date]['ratio']) / 100
 
     if pred_ratio > 0:
         action = 1
@@ -87,19 +81,21 @@ def get_daily_action_parallel():
 
     print('[Predict]:', pred_ratio)
     print('[Actual ]:', act_ratio)
+    print('[Market ]:', market_ratio)
 
-    return action, pred_ratio, act_ratio
+    return action, pred_ratio, act_ratio, market_ratio
 
 def regression_test(func, name):
 
     strategy_net_values = [1.0]
     act_net_values = [1.0]
+    market_net_values = [1.0]
     dates = [market.current_date.date()]
     while config.start_date <= config.end_date:
 
         print('\n[Current Date]: ' + str(market.current_date.date()))
 
-        action, pred_ratio, act_ratio = func()
+        action, pred_ratio, act_ratio, market_ratios = func()
 
         if action == 1:
             print('[Action]: Buy in!')
@@ -109,10 +105,11 @@ def regression_test(func, name):
             strategy_net_values.append(strategy_net_values[-1])
 
         act_net_values.append(act_net_values[-1] * (1 + act_ratio))
+        market_net_values.append(market_net_values[-1] * (1 + market_ratios))
 
         market._pass_a_day()
         dates.append(market.current_date.date())
-        plot_nav_curve(strategy_net_values, act_net_values, dates, name)
+        plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, name)
 
 def result_check(tops, name, pred_ratio, act_ratio):
     def compare_plot(x1, x2, name):
@@ -141,10 +138,11 @@ if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
     time_start = time.time()
 
-    # regression_test(get_daily_action_serial, 'serial_regression_result.jpg')
-
-    # queue = Manager().Queue()
-    regression_test(get_daily_action_parallel, 'parallel_regression_result.jpg')
+    if config.parallel:
+        # queue = Manager().Queue()
+        regression_test(get_daily_action_parallel, 'parallel_regression_result.jpg')
+    else:
+        regression_test(get_daily_action_serial, 'serial_regression_result.jpg')
 
     time_end = time.time()
     print('Total Time is:', time_end - time_start)
