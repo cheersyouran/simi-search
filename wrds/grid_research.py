@@ -2,9 +2,10 @@ import time
 import numpy as np
 import os
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from datetime import timedelta
-from os import listdir, path
 from scipy.spatial.distance import euclidean
 from sklearn import preprocessing
 from multiprocessing import Pool, Manager
@@ -150,7 +151,6 @@ class Market:
         date_ = pd.to_datetime(self.trading_days[self.trading_days['DATE'] >= date].head(nb_day).tail(1).values[0][0])
         return date_
 
-
 market = Market()
 
 def weighted_distance(x, y, length):
@@ -254,67 +254,6 @@ def get_daily_action_parallel():
 
     return action, pred_ratio, act_ratio, market_ratio
 
-def plot_simi_stock(top, data, pattern, filename, codes=config.code):
-    print('plot simi stock of ', codes, ' ...')
-    def init_plot_data():
-        plot_codes = np.append(top['CODE'].values, codes)
-        plot_dates = list(top['DATE'].values)
-        plot_dates.append(None)
-        plot_prices = np.zeros([config.nb_similarity + 1, config.pattern_length])
-        plot_legend = list()
-        return plot_codes, plot_dates, plot_prices, plot_legend
-
-    plot_codes, plot_dates, plot_prices, plot_legend = init_plot_data()
-
-    for i in range(config.nb_similarity):
-        plot_quote = data[data['CODE'] == plot_codes[i]]
-        plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(config.pattern_length)
-        plot_prices[i] = plot_quote['CLOSE'].values
-        plot_legend.append(
-            str(plot_codes[i]) + "," + config.similarity_method + ":" +
-            str(top.iloc[i][config.similarity_method]))
-
-    plot_prices[-1] = pattern['CLOSE'].values
-    plot_dates[-1] = pattern['DATE'].iloc[-1]
-    plot_legend.append(str(plot_codes[-1]))
-    norm_plot_prices = [norm(plot_prices[i]) for i in range(config.nb_similarity + 1)]
-
-    # print('股票价格:')
-    # print(plot_prices)
-
-    # print('股票norm:')
-    # print(norm_plot_prices)
-
-    # 验证结果
-    from codes.all_search import t_rol_aply
-    if config.speed_method not in ['changed']:
-        for i in range(config.nb_similarity):
-            a = t_rol_aply(plot_prices[i], plot_prices[-1])
-            b = top.iloc[i][config.similarity_method]
-            # print(a, b)
-            assert a == b, 'calcu error!'
-
-    line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.', 'k:', 'k-.', 'k--', 'k:', 'k-.']
-    for i in range(plot_codes.size):
-        if i == plot_codes.size - 1:
-            plt.plot(norm_plot_prices[i], 'r-', label=norm_plot_prices[i], linewidth=1.5)
-        else:
-            plt.plot(norm_plot_prices[i], line_styles[i], label=norm_plot_prices[i], linewidth=1.2)
-
-    plt.xlabel('Time')
-    if config.speed_method == 'value_ratio_fft_euclidean':
-        plt.ylabel('NAV')
-    else:
-        plt.ylabel('Close Price')
-    plt.legend(plot_legend, loc='upper left')
-    plt.title("Similarity Search[" + plot_codes[-1] + "]\n")
-    plt.grid(True)
-    plt.xticks(fontsize=8, rotation=45)
-    plt.ioff()
-    # plt.show()
-    plt.savefig('../pic/' + filename+'.jpg')
-    plt.close()
-
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, name):
     print('\nplot nav curve...')
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
@@ -333,14 +272,6 @@ def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, n
     plt.savefig('../pic/' + name)
     plt.close()
 
-def compare_plot(x1, x2):
-    plt.plot(x1)
-    plt.plot(x2)
-    plt.grid(True)
-    plt.ioff()
-    plt.savefig('../pic/' + 'compare_result.jpg')
-    plt.close()
-
 def regression_test(func, name):
 
     strategy_net_values = [1.0]
@@ -350,7 +281,7 @@ def regression_test(func, name):
     while config.start_date <= config.end_date:
 
         print('\n[Current Date]: ' + str(market.current_date.date()))
-
+        time_start = time.time()
         action, pred_ratio, act_ratio, market_ratios = func()
 
         if action == 1:
@@ -367,36 +298,14 @@ def regression_test(func, name):
         dates.append(market.current_date.date())
         plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, name)
 
-def result_check(tops, name, pred_ratio, act_ratio):
-    def compare_plot(x1, x2, name):
-        plt.plot(x1)
-        plt.plot(x2)
-        plt.grid(True)
-        plt.ioff()
-        plt.savefig('../pic/' + name + '.jpg')
-        plt.close()
-
-    top1 = tops.iloc[0]
-    length = config.pattern_length + 1
-
-    pred = market.get_data(code=top1['CODE'], end_date=market.pass_days(top1['DATE'], 2), pattern_length=length)
-    act = market.get_data(code=config.code, start_date=config.start_date, pattern_length=length)
-
-    pred_ratio1 = (pred.iloc[-1]['CLOSE'] - pred.iloc[-2]['CLOSE']) / pred.iloc[-2]['CLOSE']
-    act_ratio1 = (act.iloc[-1]['CLOSE'] - act.iloc[-2]['CLOSE']) / act.iloc[-2]['CLOSE']
-
-    assert pred_ratio1 == pred_ratio, 'calcu error!'
-    assert act_ratio1 == act_ratio, 'calcu error!'
-
-    # compare_plot(norm(pred['CLOSE'].values), norm(act['CLOSE'].values), name)
+        time_end = time.time()
+        print('Search Time: ', time_end - time_start)
 
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
     time_start = time.time()
 
-    if config.parallel:
-        # queue = Manager().Queue()
-        regression_test(get_daily_action_parallel, 'parallel_regression_result.jpg')
+    regression_test(get_daily_action_parallel, 'parallel_regression_result.png')
 
     time_end = time.time()
     print('Total Time is:', time_end - time_start)
