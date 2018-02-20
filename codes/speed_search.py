@@ -30,7 +30,7 @@ def speed_search(pattern, targets, code=config.code, col='CLOSE'):
     sorted_std_diff = sorted_std_diff[sorted_std_diff['VOLUME'] != 0]
     sorted_std_diff = sorted_std_diff[sorted_std_diff['VOLUME'] != '0']
 
-    sorted_std_diff = sorted_std_diff.head(200)
+    sorted_std_diff = sorted_std_diff.head(100)
 
     sorted_std_diff[config.similarity_method] = -1
 

@@ -1,5 +1,6 @@
 import sys
 import os
+
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(curPath)
@@ -55,7 +56,7 @@ def get_daily_action_serial():
 
 def get_daily_action_parallel():
 
-    pool = Pool(processes=os.cpu_count())
+    pool = Pool(processes=config.nb_codes)
     top1s = pool.map(parallel_speed_search, market.codes)
     top1s = pd.DataFrame(columns=['CODE', 'DATE', config.similarity_method, 'ORG_CODE'], data=top1s)
 
@@ -74,7 +75,7 @@ def get_daily_action_parallel():
     top1s['act_ratios'] = act_ratios
 
     top1s = top1s[top1s['pred_ratio'] > 0]
-    # top1s_df.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
+    top1s = top1s.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
 
     pred_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['pred_ratio']) * (1 / top1s.shape[0])
     act_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['act_ratios']) * (1 / top1s.shape[0])
