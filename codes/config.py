@@ -32,11 +32,11 @@ class Config:
         self.ZZ800_TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
 
         self.code = '000001.SZ'
-        self.nb_codes = 800
+        self.nb_codes = 40
 
         self.pattern_length = 30
         self.regression_days = 30
-        self.start_date = pd.to_datetime('2017-02-24')
+        self.start_date = pd.to_datetime('2017-03-17')
         self.end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.parallel = True
@@ -45,8 +45,9 @@ class Config:
         self.similarity_method = 'euclidean' #'pearsonr'
 
         self.nb_similarity = 2
-        self.nb_to_make_action = 20
+        self.nb_to_make_action = 10
         self.nb_data = 0
+        self.above_ratio = 0.00
 
         self.weighted_dist = True
 
