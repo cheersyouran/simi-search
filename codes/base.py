@@ -161,7 +161,7 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
     plt.xticks(fontsize=8, rotation=45)
     plt.ioff()
     # plt.show()
-    plt.savefig('../pic/' + filename+'.jpg')
+    plt.savefig(config.rootPath + '/pic/' + filename+'.png')
     plt.close()
 
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, name):
@@ -179,7 +179,7 @@ def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, n
     plt.xticks(fontsize=8)
     plt.ioff()
     # plt.show()
-    plt.savefig('../pic/' + name)
+    plt.savefig(config.rootPath + '/pic/' + name + '.png')
     plt.close()
 
 def compare_plot(x1, x2):

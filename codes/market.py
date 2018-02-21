@@ -1,6 +1,7 @@
 from codes.config import config
 import os
 import pandas as pd
+from memory_profiler import profile
 
 class Market:
     __instance = None
@@ -42,7 +43,7 @@ class Market:
             self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
     def _init_ratios(self):
-        self.ratios = pd.read_csv('../data/800_ratio.csv', parse_dates=['DATE'])
+        self.ratios = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
 
     def _init_codes(self):
         self.codes = pd.read_csv(config.ZZ800_CODES).head(config.nb_codes).values.flatten()
@@ -56,8 +57,8 @@ class Market:
 
     def get_historical_data(self, start_date=None, end_date=None, speed_method=config.speed_method, code=config.code):
 
-        self.targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
-        self.targets = self.targets[self.targets['DATE'] < '2017-12-29']
+        targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
+        targets = targets[targets['DATE'] < '2017-12-29']
 
         if start_date == None and end_date != None:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)
@@ -69,7 +70,9 @@ class Market:
         self.pattern = self.pattern.reset_index(drop=True)
 
         if config.nb_data != 0:
-            self.targets = self.targets.head(config.nb_data)
+            targets = targets.head(config.nb_data)
+
+        self.targets = targets
 
         return self.all_data, self.pattern, self.targets, self.col
 

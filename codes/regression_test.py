@@ -1,5 +1,6 @@
 import sys
 import os
+import psutil
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -17,6 +18,7 @@ from codes.config import config
 from codes.speed_search import parallel_speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
+from memory_profiler import profile
 
 def get_daily_action_serial():
     all_data, pattern, target, col = market.get_historical_data(start_date=config.start_date)
@@ -30,8 +32,6 @@ def get_daily_action_serial():
 
     top1 = tops.iloc[0]
 
-    assert tops
-
     pred = market.get_data(start_date=top1['DATE'], code=top1['CODE']).head(2)
     pred_ratio = (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
@@ -39,7 +39,7 @@ def get_daily_action_serial():
     act_ratio = (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE']
 
     market_ratio = float(market.ratios[market.ratios['DATE'] == pattern['DATE'].tail(1).values[0]]['ratio']) / 100
-    result_check(tops, 'speed_' + config.code + '_' + str(market.current_date.date()), pred_ratio, act_ratio)
+    # result_check(tops, 'speed_' + config.code + '_' + str(market.current_date.date()), pred_ratio, act_ratio)
 
     if pred_ratio > 0:
         action = 1
@@ -123,6 +123,10 @@ def regression_test(func, name):
         time_end = time.time()
         print('Search Time:', time_end - time_start)
 
+        print('CPU id:', os.getpid())
+        print('Memory in used:', psutil.Process(os.getpid()).memory_info().rss/1024/1024, 'M')
+        print('Memory in all :', psutil.virtual_memory().total/1024/1024/1024, 'G')
+
 def result_check(tops, name, pred_ratio, act_ratio):
     def compare_plot(x1, x2, name):
         plt.plot(x1)
@@ -152,9 +156,9 @@ if __name__ == '__main__':
 
     if config.parallel:
         # queue = Manager().Queue()
-        regression_test(get_daily_action_parallel, 'parallel_regression_result.png')
+        regression_test(get_daily_action_parallel, 'parallel_regression_result')
     else:
-        regression_test(get_daily_action_serial, 'serial_regression_result.png')
+        regression_test(get_daily_action_serial, 'serial_regression_result')
 
     time_end = time.time()
     print('Total Time is:', time_end - time_start)

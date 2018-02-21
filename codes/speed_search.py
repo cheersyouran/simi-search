@@ -3,6 +3,8 @@ from scipy.stats.stats import pearsonr
 from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
 import time
+import psutil
+from memory_profiler import profile
 
 def speed_search(pattern, targets, code=config.code, col='CLOSE'):
 
@@ -50,6 +52,11 @@ def parallel_speed_search(code):
     top1 = tops.head(1)[['CODE', 'DATE', config.similarity_method]].values.flatten()
     top1 = np.hstack((top1, code))
     # queue.put([tops, pattern, code])
+
+    print('CPU id:', os.getpid())
+    print('Memory in used:', psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024, 'M')
+    print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024/ 1024, 'G')
+
     return top1
 
 if __name__ == '__main__':
