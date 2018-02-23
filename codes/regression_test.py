@@ -75,11 +75,17 @@ def get_daily_action_parallel():
 
     tops = pd.DataFrame()
     tops['CODE'] = codes
+    tops['DATE'] = market.current_date
     tops['PRED'] = pred_ratios
     tops['ACT'] = act_ratios
+    tops.to_csv('./cor.csv', mode='a', header=False, index=False)
 
     p1 = pearsonr(pred_ratios, act_ratios)[0]
-    print('Correlation: ', p1, ' : ', pred_ratios, act_ratios)
+    print('Correlation: ', p1)
+    pearson = pd.DataFrame()
+    pearson['DATE'] = market.current_date
+    pearson['P'] = p1
+    pearson.to_csv('./pearsonr.csv', mode='a', header=False, index=False)
 
     # tops = tops.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
 
@@ -130,10 +136,6 @@ def regression_test(func, name):
 
         time_end = time.time()
         print('Search Time:', time_end - time_start)
-
-        print('CPU id:', os.getpid())
-        print('Memory in used:', psutil.Process(os.getpid()).memory_info().rss/1024/1024, 'M')
-        print('Memory in all :', psutil.virtual_memory().total/1024/1024/1024, 'G')
 
 def result_check(tops, name, pred_ratio, act_ratio):
     def compare_plot(x1, x2, name):

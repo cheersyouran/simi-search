@@ -12,6 +12,8 @@ RESULT_FILE=result_info.txt
 #    rm $RESULT_FILE
 #fi
 
+rm *.csv
+
 ~/miniconda3/bin/python3 ../codes/regression_test.py >> $RESULT_FILE
 
 echo "Finished job at `date`"

@@ -49,7 +49,7 @@ def _speed_search(pattern, targets, code=config.code, col='CLOSE'):
 def parallel_speed_search(code):
     all_data, pattern, targets, col = market.get_historical_data(start_date=config.start_date, code=code)
     tops = _speed_search(pattern, targets, code, col)
-    tops = tops.head(20)[['CODE', 'DATE', config.similarity_method]]
+    tops = tops.head(15)[['CODE', 'DATE', config.similarity_method]]
     tops['pattern'] = code
     # queue.put([tops, pattern, code])
 

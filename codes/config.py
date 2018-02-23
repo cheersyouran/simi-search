@@ -33,10 +33,10 @@ class Config:
         self.ZZ800_MARKET_RATIO =  self.rootPath + '/data/800_ratio.csv'
 
         self.code = '000001.SZ'
-        self.nb_codes = 4
+        self.nb_codes = 100
 
         self.pattern_length = 30
-        self.regression_days = 100
+        self.regression_days = 200
         self.start_date = pd.to_datetime('2017-01-01')
         self.end_date = self.start_date + timedelta(days=self.regression_days)
 
