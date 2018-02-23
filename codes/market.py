@@ -55,10 +55,14 @@ class Market:
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
         config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(1).values[0][0])
 
+    def _pass_a_week(self):
+        self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(5).tail(1).values[0][0])
+        config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(5).tail(1).values[0][0])
+
     def get_historical_data(self, start_date=None, end_date=None, speed_method=config.speed_method, code=config.code):
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
-        targets = targets[targets['DATE'] < '2017-12-29']
+        targets = targets[targets['DATE'] < '2017-12-01']
 
         if start_date == None and end_date != None:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)

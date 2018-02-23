@@ -6,7 +6,7 @@ import time
 import psutil
 from memory_profiler import profile
 
-def speed_search(pattern, targets, code=config.code, col='CLOSE'):
+def _speed_search(pattern, targets, code=config.code, col='CLOSE'):
 
     if config.speed_method in ['fft_euclidean', 'wave_fft_euclidean', 'fft']:
         ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
@@ -48,22 +48,26 @@ def speed_search(pattern, targets, code=config.code, col='CLOSE'):
 
 def parallel_speed_search(code):
     all_data, pattern, targets, col = market.get_historical_data(start_date=config.start_date, code=code)
-    tops = speed_search(pattern, targets, code, col)
-    top1 = tops.head(1)[['CODE', 'DATE', config.similarity_method]].values.flatten()
-    top1 = np.hstack((top1, code))
+    tops = _speed_search(pattern, targets, code, col)
+    tops = tops.head(20)[['CODE', 'DATE', config.similarity_method]]
+    tops['pattern'] = code
     # queue.put([tops, pattern, code])
 
-    print('CPU id:', os.getpid())
-    print('Memory in used:', psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024, 'M')
-    print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024/ 1024, 'G')
+    pred_ratios = 0
+    # top 20 similar stocks about this stock
+    for _, top in tops.iterrows():
+        pred = market.get_data(start_date=top['DATE'], code=top['CODE']).head(6)
+        pred_ratios += (pred.iloc[-1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
-    return top1
+    print(os.getpid(), 'Memory in used:', psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024, 'M')
+
+    return [code, pred_ratios/tops.shape[0]]
 
 if __name__ == '__main__':
 
     time_start = time.time()
     all_data, pattern, targets, col = market.get_historical_data(config.start_date, code=config.code)
-    tops = speed_search(pattern, targets, config.code, col)
+    tops = _speed_search(pattern, targets, config.code, col)
 
     time_end = time.time()
     print('Part Time is:', time_end - time_start)

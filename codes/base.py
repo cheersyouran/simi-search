@@ -165,7 +165,6 @@ def plot_simi_stock(top, data, pattern, filename, codes=config.code):
     plt.close()
 
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, name):
-    print('plot nav curve...')
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
     # plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
     plt.plot(dates, market_net_value, 'g-', label=market_net_value, linewidth=1.5)

@@ -13,11 +13,12 @@ import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from multiprocessing import Pool, Manager
+from multiprocessing import Pool
 from codes.config import config
 from codes.speed_search import parallel_speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
+from scipy.stats.stats import pearsonr
 from memory_profiler import profile
 
 def get_daily_action_serial():
@@ -27,8 +28,8 @@ def get_daily_action_serial():
         from codes.all_search import all_search
         tops = all_search(pattern, target, config.nb_similarity)
     else:
-        from codes.speed_search import speed_search
-        tops = speed_search(pattern, target, col)
+        from codes.speed_search import _speed_search
+        tops = _speed_search(pattern, target, col)
 
     top1 = tops.iloc[0]
 
@@ -57,28 +58,33 @@ def get_daily_action_serial():
 def get_daily_action_parallel():
 
     pool = Pool(processes=os.cpu_count())
-    top1s = pool.map(parallel_speed_search, market.codes)
-    top1s = pd.DataFrame(columns=['CODE', 'DATE', config.similarity_method, 'ORG_CODE'], data=top1s)
+    avg_results = pool.map(parallel_speed_search, market.codes)
 
-    pred_ratios = []
-    act_ratios = []
-    for _, top1 in top1s.iterrows():
+    pred_ratios, act_ratios, act_ratios2, act_ratios3, act_ratios4, codes = [], [], [], [], [], []
+    for avg_result in avg_results:
         # tops, pattern, code = queue.get()
         # plot_simi_stock(tops, market.all_data, pattern, 'speed_' + config.speed_method + '_' + code, codes=code)
-        pred = market.get_data(start_date=top1['DATE'], code=top1['CODE']).head(2)
-        pred_ratios.append((pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'])
+        code = avg_result[0]
+        codes.append(code)
 
-        act = market.get_data(start_date=market.current_date, code=config.code).head(2)
-        act_ratios.append((act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'])
+        pred = avg_result[1]
+        pred_ratios.append(pred)
 
-    top1s['pred_ratio'] = pred_ratios
-    top1s['act_ratios'] = act_ratios
+        act_1 = market.get_data(start_date=market.current_date, code=code).head(6)
+        act_ratios.append((act_1.iloc[-1]['CLOSE'] - act_1.iloc[0]['CLOSE']) / act_1.iloc[0]['CLOSE'])
 
-    top1s = top1s[top1s['pred_ratio'] > config.above_ratio]
-    top1s = top1s.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
+    tops = pd.DataFrame()
+    tops['CODE'] = codes
+    tops['PRED'] = pred_ratios
+    tops['ACT'] = act_ratios
 
-    pred_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['pred_ratio']) * (1 / top1s.shape[0])
-    act_ratio = -1 if top1s.shape[0] == 0 else np.sum(top1s['act_ratios']) * (1 / top1s.shape[0])
+    p1 = pearsonr(pred_ratios, act_ratios)[0]
+    print('Correlation: ', p1, ' : ', pred_ratios, act_ratios)
+
+    # tops = tops.sort_values(ascending=False, by=['pred_ratio']).head(config.nb_to_make_action)
+
+    pred_ratio = -1 if tops.shape[0] == 0 else np.sum(tops['PRED']) * (1 / tops.shape[0])
+    act_ratio = -1 if tops.shape[0] == 0 else np.sum(tops['ACT']) * (1 / tops.shape[0])
     market_ratio = float(market.ratios[market.ratios['DATE'] == market.current_date]['ratio']) / 100
 
     if pred_ratio > 0:
@@ -93,6 +99,8 @@ def get_daily_action_parallel():
     return action, pred_ratio, act_ratio, market_ratio
 
 def regression_test(func, name):
+
+    print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
 
     strategy_net_values = [1.0]
     act_net_values = [1.0]
