@@ -25,16 +25,12 @@ class Market:
 
         self.pattern = None
         self.targets = None
-        self.current_date = self.pass_days(config.start_date, config.pattern_length)
-        self.col = 'CLOSE'
+        self.current_date = self.pass_days(config.start_date, config.pattern_length - 1)
 
     def _init_all_data(self, speed_method=config.speed_method):
 
         if speed_method == 'fft_euclidean':
             file = config.ZZ800_FFT_DATA
-        elif speed_method == 'wave_fft_euclidean':
-            file = config.ZZ800_WAVE_FFT_DATA
-            self.col = 'denoise_CLOSE'
         elif speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
 
@@ -78,7 +74,7 @@ class Market:
 
         self.targets = targets
 
-        return self.all_data, self.pattern, self.targets, self.col
+        return self.all_data, self.pattern, self.targets
 
     def get_data(self, start_date=None, end_date=None, code=None, pattern_length=config.pattern_length):
 
@@ -99,12 +95,10 @@ class Market:
             elif start_date != None and end_date != None:
                 pattern = all_data[(all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
 
-        pattern = pattern.reset_index(drop=True)
-
         return pattern
 
     def pass_days(self, date, nb_day):
-        date_ = pd.to_datetime(self.trading_days[self.trading_days['DATE'] >= date].head(nb_day).tail(1).values[0][0])
+        date_ = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > date].head(nb_day).tail(1).values[0][0])
         return date_
 
 market = Market()
