@@ -5,7 +5,7 @@
 
 echo "Starting job at `date`"
 
-RESULT_FILE=result_info2.txt
+RESULT_FILE=result_info.txt
 
 #if [ -fe $RESULT_FILE ]
 #then

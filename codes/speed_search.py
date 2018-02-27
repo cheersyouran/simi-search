@@ -4,7 +4,7 @@ from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
 import time
 
-def _speed_search(pattern, targets, code):
+def _speed_search(pattern, targets):
 
     if config.speed_method in ['fft_euclidean', 'fft']:
         ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
@@ -39,9 +39,9 @@ def _speed_search(pattern, targets, code):
 
 def parallel_speed_search(code):
     all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
-    tops = _speed_search(pattern, targets, code)
+    tops = _speed_search(pattern, targets)
 
-    plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
+    # plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
 
     tops = tops[['CODE', 'DATE', config.similarity_method]]
     tops['pattern'] = code

@@ -36,7 +36,8 @@ class Config:
         self.start_date = pd.to_datetime('2017-02-24')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
-        self.speed_method = 'fft_euclidean' #'value_ratio_fft_euclidean'
+        # self.speed_method = 'fft_euclidean'
+        self.speed_method = 'value_ratio_fft_euclidean'
         self.fft_level = 3
         self.similarity_method = 'euclidean' #'pearsonr'
 
