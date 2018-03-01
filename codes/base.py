@@ -17,8 +17,11 @@ def weighted_distance(x, y, length):
 def norm(X):
     if config.speed_method in ['value_ratio_fft_euclidean', 'changed']:
         result = X / pd.DataFrame(X).iloc[0][0]
-    else:
+    elif config.speed_method in ['rm_vrfft_euclidean']:
+        result = X / pd.DataFrame(X).iloc[0][0]
+    elif config.speed_method in ['fft_euclidean']:
         result = preprocessing.scale(X)
+
     return result
 
 def plot_simi_stock(top, data, pattern, filename, codes):

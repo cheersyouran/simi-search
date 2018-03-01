@@ -15,6 +15,7 @@ class Market:
         self._init_all_data(config.speed_method)
 
         self.codes = None
+        self.codes_300 = None
         self._init_codes()
 
         self.ratios = None
@@ -33,19 +34,31 @@ class Market:
             file = config.ZZ800_FFT_DATA
         elif speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
+        elif speed_method == 'rm_vrfft_euclidean':
+            raise Exception()
 
         if self.all_data is None:
             print('Init all data! ', os.getpid())
             self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
+            if config.index == 300:
+                self.all_data = self.all_data[self.all_data['CODE'].str.contains("")]
+
+
     def _init_ratios(self):
-        self.ratios = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
+        if config.index == 800:
+            self.ratios = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
+        elif config.index == 300:
+            self.ratios = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
+        else:
+            raise Exception()
 
     def _init_codes(self):
         self.codes = pd.read_csv(config.ZZ800_CODES).head(config.nb_codes).values.flatten()
+        self.codes_300 = pd.read_csv(config.HS300_CODES).head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
-        self.trading_days = pd.read_csv(config.ZZ800_TRAINING_DAY, parse_dates=['DATE'])
+        self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
 
     def _pass_a_day(self):
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])

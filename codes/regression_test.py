@@ -24,7 +24,12 @@ from scipy.stats.stats import pearsonr
 def get_daily_action_parallel():
 
     pool = Pool(processes=os.cpu_count())
-    avg_results = pool.map(parallel_speed_search, market.codes)
+
+    if config.index == 300:
+        avg_results = pool.map(parallel_speed_search, market.codes_300)
+    elif config.index == 800:
+        avg_results = pool.map(parallel_speed_search, market.codes)
+
     pool.close()
 
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = [], [], [], []
@@ -56,7 +61,7 @@ def get_daily_action_parallel():
                                      'ACT1': act_ratios1, 'ACT5': act_ratios2,
                                      'ACT10': act_ratios3, 'ACT20': act_ratios4}))
 
-    tops.to_csv(config.rootPath + '/output/corr.csv', mode='a', header=False, index=False)
+    tops.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
 
     p1 = pearsonr(pred_ratios1, act_ratios1)[0]
     p2 = pearsonr(pred_ratios5, act_ratios2)[0]
@@ -64,7 +69,7 @@ def get_daily_action_parallel():
     p4 = pearsonr(pred_ratios20, act_ratios4)[0]
 
     pearson = pd.DataFrame(OrderedDict({'CURRENT_DATE': [market.current_date], 'P1': [p1], 'P2': [p2], 'P3': [p3], 'P4': [p4]}))
-    pearson.to_csv(config.rootPath + '/output/pearson.csv', mode='a', header=False, index=False)
+    pearson.to_csv(config.PEARSON_CORR_RESLUT, mode='a', header=False, index=False)
 
     pred_ratio = np.sum(tops['PRED1']) * (1 / tops.shape[0])
     act_ratio = np.sum(tops['ACT1']) * (1 / tops.shape[0])

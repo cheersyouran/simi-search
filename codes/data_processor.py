@@ -68,7 +68,28 @@ def gen_new_800_data():
 
     result.to_csv('800_data.csv', index=False)
 
+def gen_300_fft_from_800_fft():
+
+    codes_300 = pd.read_csv(config.HS300_CODES)['code'].values
+
+    if config.speed_method == 'fft_euclidean':
+        data = pd.read_csv(config.ZZ800_FFT_DATA)
+    else:
+        data = pd.read_csv(config.ZZ800_VALUE_RATIO_FFT_DATA)
+
+    data = data[data['CODE'].isin(codes_300)]
+
+    if config.speed_method == 'fft_euclidean':
+        data.to_csv(config.HS300_FFT_DATA, index=False)
+    else:
+        data.to_csv(config.HS300_VALUE_RATIO_FFT_DATA, index=False)
+
 if __name__ == '__main__':
 
+    df = pd.read_csv(config.HS300_VALUE_RATIO_FFT_DATA)
+    df['CODE'].unique()
+
+    df = pd.read_csv(config.ZZ800_VALUE_RATIO_FFT_DATA)
+    df['CODE'].unique()
     # gen_new_800_data()
-    gen_800_fft_data()
+    # gen_800_fft_data()

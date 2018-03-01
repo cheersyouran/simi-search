@@ -21,23 +21,39 @@ class Config:
 
         self.RAW_DATA_DIR = self.rootPath + '/data/raw_data'
         self.DATA = self.rootPath + '/data/data.csv'
-        self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
+
         self.ZZ800_DATA = self.rootPath + '/data/800_data.csv'
         self.ZZ800_FFT_DATA = self.rootPath + '/data/800_fft_data.csv'
         self.ZZ800_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/800_value_ratio_fft_data.csv'
-        self.ZZ800_TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
         self.ZZ800_MARKET_RATIO = self.rootPath + '/data/800_ratio.csv'
+        self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
+        self.ZZ800_RM_VR_FFT = self.rootPath + 'data/800_rm_vr_fft.csv'
 
+
+        self.HS300_MARKET_RATIO = self.rootPath + '/data/300_ratio.csv'
+        self.HS300_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/300_value_ratio_fft_data.csv'
+        self.HS300_FFT_DATA = self.rootPath + '/data/300_fft_data.csv'
+        self.HS300_CODES = self.rootPath + '/data/300_codes.csv'
+
+        self.TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
+
+
+        self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr.csv'
+        self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/result.csv'
+
+        self.index = 300
         self.code = '000001.SZ'
-        self.nb_codes = 100
+        self.nb_codes = 300
 
         self.pattern_length = 30
         self.regression_days = 200
         self.start_date = pd.to_datetime('2017-02-24')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
-        # self.speed_method = 'fft_euclidean'
+        self.speed_method = 'fft_euclidean'
         self.speed_method = 'value_ratio_fft_euclidean'
+        # self.speed_method = 'rm_vrfft_euclidean'
+
         self.fft_level = 3
         self.similarity_method = 'euclidean' #'pearsonr'
 
