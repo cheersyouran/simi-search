@@ -25,9 +25,9 @@ def get_daily_action_parallel():
 
     pool = Pool(processes=os.cpu_count())
 
-    if config.index == 300:
+    if config.market_index == 300:
         avg_results = pool.map(parallel_speed_search, market.codes_300)
-    elif config.index == 800:
+    elif config.market_index == 800:
         avg_results = pool.map(parallel_speed_search, market.codes)
 
     pool.close()
@@ -91,7 +91,7 @@ def get_daily_action_parallel():
 
     return action, pred_ratio, act_ratio, market_ratio
 
-def regression_test(name):
+def regression_test():
 
     print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
 
@@ -99,6 +99,8 @@ def regression_test(name):
     act_net_values = [1.0]
     market_net_values = [1.0]
     dates = [market.current_date.date()]
+    turnover_rate = 0
+    state = 0
     while config.start_date <= config.regression_end_date:
 
         print('\n[Start Date]: ' + str(config.start_date.date()))
@@ -111,18 +113,29 @@ def regression_test(name):
         if action == 1:
             print('[Action]: Buy in!')
             strategy_net_values.append(strategy_net_values[-1] * (1 + act_ratio))
-        else:
-            print('[Action]: Keep Empty')
+            if state == 0:
+                turnover_rate += 1
+                state = 1
+        elif action == -1:
+            print('[Action]: Keep Empty!')
             strategy_net_values.append(strategy_net_values[-1])
+            if state == 0:
+                turnover_rate += 1
+                state = 0
+        else:
+            raise Exception()
 
         act_net_values.append(act_net_values[-1] * (1 + act_ratio))
         market_net_values.append(market_net_values[-1] * (1 + market_ratios))
 
-        market._pass_a_day()
-        # market._pass_a_week()
+        if config.weekily_regression == False:
+            market._pass_a_day()
+        else:
+            market._pass_a_week()
+
         dates.append(market.current_date.date())
 
-        plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, name)
+        plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, turnover_rate)
 
         time_end = time.time()
         print('Search Time:', time_end - time_start)
@@ -148,10 +161,10 @@ def result_check(tops, name, pred_ratio, act_ratio):
     assert pred_ratio1 == pred_ratio, 'calcu error!'
     assert act_ratio1 == act_ratio, 'calcu error!'
 
-    # compare_plot(norm(pred['CLOSE'].values), norm(act['CLOSE'].values), name)
+    compare_plot(norm(pred['CLOSE'].values), norm(act['CLOSE'].values), name)
 
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
 
     # queue = Manager().Queue()
-    regression_test('parallel_regression_result')
+    regression_test()

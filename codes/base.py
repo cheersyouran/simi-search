@@ -14,13 +14,18 @@ def weighted_distance(x, y, length):
     else:
         return euclidean(x, y)
 
-def norm(X):
+def norm(X, ratio=None):
     if config.speed_method in ['value_ratio_fft_euclidean', 'changed']:
-        result = X / pd.DataFrame(X).iloc[0][0]
-    elif config.speed_method in ['rm_vrfft_euclidean']:
         result = X / pd.DataFrame(X).iloc[0][0]
     elif config.speed_method in ['fft_euclidean']:
         result = preprocessing.scale(X)
+    elif config.speed_method in ['rm_vrfft_euclidean']:
+        if ratio is None:
+            raise Exception('No Ratios!')
+        result = X / pd.DataFrame(X).iloc[0][0]
+        ratio = (ratio / 100) + 1
+        r = ratio / pd.DataFrame(ratio).iloc[0][0]
+        result = np.divide(result, r)
 
     return result
 
@@ -76,7 +81,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     plt.savefig(config.rootPath + '/pic/' + filename +'.png')
     plt.close()
 
-def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, name):
+def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, turnover_rate):
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
     plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
     plt.plot(dates, market_net_value, 'g-', label=market_net_value, linewidth=1.5)
@@ -84,13 +89,12 @@ def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, n
     plt.xlabel('Time')
     plt.ylabel('Net Asset Value')
     plt.legend(['strategy', 'baseline', 'market'], loc='upper left')
-    plt.title("Net Asset Value")
+    plt.title("Net Asset Value -- Turnover rate(" + str(turnover_rate) + ")")
     plt.grid(True)
     plt.xticks(fontsize=8, rotation=20)
-    plt.xticks(fontsize=8)
     plt.ioff()
     # plt.show()
-    plt.savefig(config.rootPath + '/pic/' + name + '.png')
+    plt.savefig(config.rootPath + config.regression_result)
     plt.close()
 
 def compare_plot(x1, x2):

@@ -29,21 +29,20 @@ class Config:
         self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
         self.ZZ800_RM_VR_FFT = self.rootPath + 'data/800_rm_vr_fft.csv'
 
-
         self.HS300_MARKET_RATIO = self.rootPath + '/data/300_ratio.csv'
         self.HS300_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/300_value_ratio_fft_data.csv'
         self.HS300_FFT_DATA = self.rootPath + '/data/300_fft_data.csv'
         self.HS300_CODES = self.rootPath + '/data/300_codes.csv'
 
-        self.TRAINING_DAY = self.rootPath + '/data/800_training_day.csv'
-
+        self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
 
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr.csv'
         self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/result.csv'
+        self.regression_result = '/pic/parallel_regression_result.png'
 
-        self.index = 300
+        self.market_index = 300
         self.code = '000001.SZ'
-        self.nb_codes = 300
+        self.nb_codes = 3
 
         self.pattern_length = 30
         self.regression_days = 200
@@ -52,16 +51,17 @@ class Config:
 
         self.speed_method = 'fft_euclidean'
         self.speed_method = 'value_ratio_fft_euclidean'
-        # self.speed_method = 'rm_vrfft_euclidean'
+        self.speed_method = 'rm_vrfft_euclidean'
 
         self.fft_level = 3
         self.similarity_method = 'euclidean' #'pearsonr'
 
-        self.nb_similar = 5
+        self.nb_similar = 10
         self.nb_data = 0
         self.above_ratio = 0.00
 
         self.weighted_dist = True
+        self.weekily_regression = False
 
 config = Config()
 
