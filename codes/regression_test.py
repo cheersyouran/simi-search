@@ -71,8 +71,13 @@ def get_daily_action_parallel():
     pearson = pd.DataFrame(OrderedDict({'CURRENT_DATE': [market.current_date], 'P1': [p1], 'P2': [p2], 'P3': [p3], 'P4': [p4]}))
     pearson.to_csv(config.PEARSON_CORR_RESLUT, mode='a', header=False, index=False)
 
-    pred_ratio = np.sum(tops['PRED1']) * (1 / tops.shape[0])
-    act_ratio = np.sum(tops['ACT1']) * (1 / tops.shape[0])
+    if config.weekily_regression:
+        pred_ratio = np.sum(tops['PRED5']) * (1 / tops.shape[0])
+        act_ratio = np.sum(tops['ACT5']) * (1 / tops.shape[0])
+    else:
+        pred_ratio = np.sum(tops['PRED1']) * (1 / tops.shape[0])
+        act_ratio = np.sum(tops['ACT1']) * (1 / tops.shape[0])
+
     market_ratio = float(market.ratios[market.ratios['DATE'] == market.pass_days(market.current_date, 1)]['ratio']) / 100
 
     if pred_ratio > 0:

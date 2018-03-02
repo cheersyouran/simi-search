@@ -42,11 +42,11 @@ class Config:
 
         self.market_index = 300
         self.code = '000001.SZ'
-        self.nb_codes = 3
+        self.nb_codes = 300
 
         self.pattern_length = 30
-        self.regression_days = 200
-        self.start_date = pd.to_datetime('2017-02-24')
+        self.regression_days = 1000
+        self.start_date = pd.to_datetime('2015-01-05')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.speed_method = 'fft_euclidean'
@@ -61,7 +61,7 @@ class Config:
         self.above_ratio = 0.00
 
         self.weighted_dist = True
-        self.weekily_regression = False
+        self.weekily_regression = True
 
 config = Config()
 
