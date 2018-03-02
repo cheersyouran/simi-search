@@ -1,5 +1,12 @@
 #encoding:utf-8
-import pandas as pd
+import sys
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(curPath)
+sys.path.append(rootPath)
+
 from os import listdir, path
 from codes.config import *
 from codes.base import norm
@@ -87,7 +94,9 @@ def gen_800_RM_VR_fft_data():
     def apply(data, rolling_aply, freq, method):
         global count
         count = 0
-        result = data['CLOSE'].rolling(window=config.pattern_length).apply(func=rolling_aply, args=(freq, method, data))
+        result = data.copy()
+        result['CLOSE'] = data['CLOSE'].rolling(window=config.pattern_length).apply(func=rolling_aply, args=(freq, method, data))
+        result['800_RATIO'] = data['800_RATIO']
         return result
 
     data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
@@ -99,8 +108,8 @@ def gen_800_RM_VR_fft_data():
 
     for i in range(config.fft_level):
         ind = str(i+1)
-        data['fft'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')
-        data['deg'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')
+        data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')['CLOSE'].values
+        data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')['CLOSE'].values
 
     data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
 
