@@ -78,7 +78,7 @@ def get_daily_action_parallel():
         pred_ratio = np.sum(tops['PRED1']) * (1 / tops.shape[0])
         act_ratio = np.sum(tops['ACT1']) * (1 / tops.shape[0])
 
-    market_ratio = float(market.ratios[market.ratios['DATE'] == market.pass_days(market.current_date, 1)]['ratio']) / 100
+    market_ratio = float(market.ratios[market.ratios['DATE'] == market.pass_days(market.current_date, 1)][config.market_ratio_type]) / 100
 
     if pred_ratio > 0:
         action = 1

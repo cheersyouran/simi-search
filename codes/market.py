@@ -35,7 +35,7 @@ class Market:
         elif speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
         elif speed_method == 'rm_vrfft_euclidean':
-            raise Exception()
+            file = config.ZZ800_RM_VR_FFT
 
         if self.all_data is None:
             print('Init all data! ', os.getpid())

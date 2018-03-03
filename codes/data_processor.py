@@ -77,8 +77,6 @@ def gen_800_RM_VR_fft_data():
     def rolling_aply_fft(x, freq, method, data):
         global count
         x_test = data['CLOSE'].iloc[count:count+config.pattern_length].values
-        if x_test.size == 29:
-            print()
         if ~((x_test - x) == 0).any():
             raise Exception('Error!')
         ratio = data['800_RATIO'].iloc[count:count + config.pattern_length].values

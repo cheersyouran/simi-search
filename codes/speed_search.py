@@ -9,7 +9,7 @@ def _speed_search(pattern, targets):
     if config.speed_method in ['fft_euclidean', 'fft']:
         ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
         BETA = np.multiply([1, 1, 1, 1, 1], 1)
-    elif config.speed_method in ['value_ratio_fft_euclidean']:
+    elif config.speed_method in ['value_ratio_fft_euclidean', 'rm_vrfft_euclidean']:
         ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
         BETA = np.multiply([1, 1, 1, 1, 1], 1)
 
@@ -25,12 +25,14 @@ def _speed_search(pattern, targets):
         targets['fft_deg'] += targets['fft_' + index] + targets['deg_' + index]
 
     sorted_std_diff = targets.sort_values(ascending=True, by=['fft_deg'])
-    sorted_std_diff = sorted_std_diff.head(200)
+    sorted_std_diff = sorted_std_diff.head(config.nb_similar_of_each_stock)
 
     distances = []
     for _, ith in sorted_std_diff.iterrows():
         result = targets[(targets['CODE'] == ith['CODE']) & (targets['DATE'] <= ith['DATE'])].tail(config.pattern_length)
-        distances.append(weighted_distance(norm(result['CLOSE']), norm(pattern['CLOSE']), config.pattern_length))
+        distances.append(weighted_distance(norm(result['CLOSE'], result[config.market_ratio_type]),
+                                           norm(pattern['CLOSE'], pattern[config.market_ratio_type]),
+                                           config.pattern_length))
 
     sorted_std_diff[config.similarity_method] = distances
     tops = sorted_std_diff.sort_values(ascending=True, by=[config.similarity_method])
@@ -41,7 +43,7 @@ def parallel_speed_search(code):
     all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
     tops = _speed_search(pattern, targets)
 
-    # plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
+    plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
 
     tops = tops[['CODE', 'DATE', config.similarity_method]]
     tops['pattern'] = code

@@ -22,10 +22,10 @@ def norm(X, ratio=None):
     elif config.speed_method in ['rm_vrfft_euclidean']:
         if ratio is None:
             raise Exception('No Ratios!')
-        result = X / pd.DataFrame(X).iloc[0][0]
-        ratio = (ratio / 100) + 1
-        r = ratio / pd.DataFrame(ratio).iloc[0][0]
-        result = np.divide(result, r)
+        result_ = X / pd.DataFrame(X).iloc[0][0]
+        ratio_ = (ratio / 100) + 1
+        r = ratio_ / pd.DataFrame(ratio_).iloc[0][0]
+        result = np.divide(result_, r)
 
     return result
 
@@ -37,29 +37,36 @@ def plot_simi_stock(top, data, pattern, filename, codes):
         plot_dates.append(None)
         plot_prices = np.zeros([config.nb_similar + 1, config.pattern_length])
         plot_legend = list()
-        return plot_codes, plot_dates, plot_prices, plot_legend
+        plot_market_ratio = np.zeros([config.nb_similar + 1, config.pattern_length])
+        return plot_codes, plot_dates, plot_prices, plot_legend, plot_market_ratio
 
-    plot_codes, plot_dates, plot_prices, plot_legend = init_plot_data()
+    plot_codes, plot_dates, plot_prices, plot_legend, plot_market_ratio = init_plot_data()
 
     for i in range(config.nb_similar):
         plot_quote = data[data['CODE'] == plot_codes[i]]
         plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(config.pattern_length)
         plot_prices[i] = plot_quote['CLOSE'].values
         plot_legend.append(
-            str(plot_codes[i]) + "," + config.similarity_method + ":" +
+            str(plot_codes[i]) + "," +
+            str(config.similarity_method) + ":" +
             str(top.iloc[i][config.similarity_method]))
+        if config.speed_method == 'rm_vrfft_euclidean':
+            plot_market_ratio[i] = plot_quote[config.market_ratio_type].values
 
     plot_prices[-1] = pattern['CLOSE'].values
+    if config.speed_method == 'rm_vrfft_euclidean':
+        plot_market_ratio[-1] = pattern[config.market_ratio_type].values
+
     plot_dates[-1] = pattern['DATE'].iloc[-1]
     plot_legend.append(str(plot_codes[-1]))
-    norm_plot_prices = [norm(plot_prices[i]) for i in range(config.nb_similar + 1)]
+    norm_plot_prices = [norm(plot_prices[i], plot_market_ratio[i]) for i in range(config.nb_similar + 1)]
 
-    if config.speed_method not in ['changed']:
-        for i in range(config.nb_similar):
-            a = weighted_distance(norm(plot_prices[i]), norm(plot_prices[-1]), config.pattern_length)
-            b = top.iloc[i][config.similarity_method]
-            print(a, b)
-            assert a == b, 'calcu error!'
+    # assert for result checking
+    for i in range(config.nb_similar):
+        a = weighted_distance(norm_plot_prices[i], norm_plot_prices[-1], config.pattern_length)
+        b = top.iloc[i][config.similarity_method]
+        print(a, b)
+        assert a == b, 'calcu error!'
 
     line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.', 'k:', 'k-.', 'k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
@@ -69,7 +76,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
             plt.plot(norm_plot_prices[i], line_styles[i], label=norm_plot_prices[i], linewidth=1.2)
 
     plt.xlabel('Time')
-    if config.speed_method == 'value_ratio_fft_euclidean':
+    if config.speed_method in ['value_ratio_fft_euclidean', 'rm_vrfft_euclidean']:
         plt.ylabel('NAV')
     else:
         plt.ylabel('Close Price')
@@ -89,12 +96,14 @@ def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, t
     plt.xlabel('Time')
     plt.ylabel('Net Asset Value')
     plt.legend(['strategy', 'baseline', 'market'], loc='upper left')
-    plt.title("Net Asset Value -- Turnover rate(" + str(turnover_rate) + ")")
+    plt.title("Market: " + str(config.market_index) +
+              "\nTurnover rate: " + str(turnover_rate) +
+              "\nSpeedMethod: " + str(config.speed_method) +
+              "\nNB_similar: " + str(config.nb_similar))
     plt.grid(True)
     plt.xticks(fontsize=8, rotation=20)
     plt.ioff()
-    # plt.show()
-    plt.savefig(config.rootPath + config.regression_result)
+    plt.savefig(config.regression_result)
     plt.close()
 
 def compare_plot(x1, x2):
