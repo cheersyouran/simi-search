@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 from collections import OrderedDict
 from codes.config import config
-from codes.speed_search import parallel_speed_search
+from codes.speed_search import _speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
 from scipy.stats.stats import pearsonr
@@ -25,21 +25,41 @@ def get_daily_action_parallel():
 
     pool = Pool(processes=os.cpu_count())
 
-    avg_results = pool.map(parallel_speed_search, market.codes)
+    tops = pool.map(_speed_search, market.codes)
 
     pool.close()
 
+    tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
+    tops = tops.head(100)
+
+    def apply(x):
+        pred_ratio1, pred_ratio5, pred_ratio10, pred_ratio20 = 0, 0, 0, 0
+        for _, top in x.iterrows():
+            pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
+            pred1 = pred.head(2)
+            pred_ratio1 += (pred1.iloc[-1]['CLOSE'] - pred1.iloc[0]['CLOSE']) / pred1.iloc[0]['CLOSE']
+
+            pred2 = pred.head(6)
+            pred_ratio5 += (pred2.iloc[-1]['CLOSE'] - pred2.iloc[0]['CLOSE']) / pred2.iloc[0]['CLOSE']
+
+            pred3 = pred.head(11)
+            pred_ratio10 += (pred3.iloc[-1]['CLOSE'] - pred3.iloc[0]['CLOSE']) / pred3.iloc[0]['CLOSE']
+
+            pred4 = pred.head(21)
+            pred_ratio20 += (pred4.iloc[-1]['CLOSE'] - pred4.iloc[0]['CLOSE']) / pred4.iloc[0]['CLOSE']
+
+        size = tops.shape[0]
+        return [pred_ratio1/size, pred_ratio5/size, pred_ratio10/size, pred_ratio20/size]
+
+    result = tops.groupby(['pattern']).apply(func=apply)
+
+    act_ratios1, act_ratios2, act_ratios3, act_ratios4 = [], [], [], []
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = [], [], [], []
-    act_ratios1, act_ratios2, act_ratios3, act_ratios4, codes = [], [], [], [], []
-    for avg_result in avg_results:
+    codes = []
 
-        codes.append(avg_result[0])
-        pred_ratios1.append(avg_result[1])
-        pred_ratios5.append(avg_result[2])
-        pred_ratios10.append(avg_result[3])
-        pred_ratios20.append(avg_result[4])
+    for i, avg_result in result.iteritems():
 
-        act = market.get_data(start_date=market.current_date, code=avg_result[0])
+        act = market.get_data(start_date=market.current_date, code=i)
         act1 = act.head(2)
         act_ratios1.append((act1.iloc[-1]['CLOSE'] - act1.iloc[0]['CLOSE']) / act1.iloc[0]['CLOSE'])
 
@@ -51,6 +71,12 @@ def get_daily_action_parallel():
 
         act4 = act.head(21)
         act_ratios4.append((act4.iloc[-1]['CLOSE'] - act4.iloc[0]['CLOSE']) / act4.iloc[0]['CLOSE'])
+
+        pred_ratios1.append(avg_result[0])
+        pred_ratios5.append(avg_result[1])
+        pred_ratios10.append(avg_result[2])
+        pred_ratios20.append(avg_result[3])
+        codes.append(i)
 
     pred_act_result = pd.DataFrame(OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date,
                                      'PRED1': pred_ratios1, 'PRED5': pred_ratios5,
@@ -103,6 +129,7 @@ def regression_test():
     dates = [market.current_date.date()]
     turnover_rate = 0
     state = 0
+
     while config.start_date <= config.regression_end_date:
 
         print('\n[Start Date]: ' + str(config.start_date.date()))
@@ -142,31 +169,7 @@ def regression_test():
         time_end = time.time()
         print('Search Time:', time_end - time_start)
 
-def result_check(tops, name, pred_ratio, act_ratio):
-    def compare_plot(x1, x2, name):
-        plt.plot(x1)
-        plt.plot(x2)
-        plt.grid(True)
-        plt.ioff()
-        plt.savefig('../pic/' + name + '.jpg')
-        plt.close()
-
-    top1 = tops.iloc[0]
-    length = config.pattern_length + 1
-
-    pred = market.get_data(code=top1['CODE'], end_date=market.pass_days(top1['DATE'], 1), pattern_length=length)
-    act = market.get_data(code=config.code, start_date=config.start_date, pattern_length=length)
-
-    pred_ratio1 = (pred.iloc[-1]['CLOSE'] - pred.iloc[-2]['CLOSE']) / pred.iloc[-2]['CLOSE']
-    act_ratio1 = (act.iloc[-1]['CLOSE'] - act.iloc[-2]['CLOSE']) / act.iloc[-2]['CLOSE']
-
-    assert pred_ratio1 == pred_ratio, 'calcu error!'
-    assert act_ratio1 == act_ratio, 'calcu error!'
-
-    compare_plot(norm(pred['CLOSE'].values), norm(act['CLOSE'].values), name)
-
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
 
-    # queue = Manager().Queue()
     regression_test()

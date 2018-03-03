@@ -15,7 +15,6 @@ class Market:
         self._init_all_data(config.speed_method)
 
         self.codes = None
-        self.codes_300 = None
         self._init_codes()
 
         self.ratios = None
@@ -53,8 +52,13 @@ class Market:
             raise Exception()
 
     def _init_codes(self):
-        self.codes = pd.read_csv(config.ZZ800_CODES).head(config.nb_codes).values.flatten()
-        self.codes_300 = pd.read_csv(config.HS300_CODES).head(config.nb_codes).values.flatten()
+        if config.market_index == 300:
+            path = config.HS300_CODES
+        elif config.market_index == 800:
+            path = config.ZZ800_CODES
+        else:
+            raise Exception()
+        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
         self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])

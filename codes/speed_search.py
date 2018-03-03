@@ -2,9 +2,10 @@ from codes.config import *
 from scipy.stats.stats import pearsonr
 from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
-import time
 
-def _speed_search(pattern, targets):
+def _speed_search(code=None, pattern=None, targets=None):
+    if pattern is None:
+        all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
 
     if config.speed_method in ['fft_euclidean', 'fft']:
         ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
@@ -37,16 +38,18 @@ def _speed_search(pattern, targets):
     sorted_std_diff[config.similarity_method] = distances
     tops = sorted_std_diff.sort_values(ascending=True, by=[config.similarity_method])
 
-    return tops.head(config.nb_similar)
+    tops['pattern'] = code
+    return tops
 
 def parallel_speed_search(code):
     all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
-    tops = _speed_search(pattern, targets)
+    tops = _speed_search(pattern=pattern, targets=targets)
+    tops = tops.head(config.nb_similar)
 
-    plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
+    if config.plot_simi_stock:
+        plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
 
     tops = tops[['CODE', 'DATE', config.similarity_method]]
-    tops['pattern'] = code
 
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = 0, 0, 0, 0
 
@@ -70,16 +73,8 @@ def parallel_speed_search(code):
 
 if __name__ == '__main__':
 
-    time_start = time.time()
-
     all_data, pattern, targets = market.get_historical_data(config.start_date, code=config.code)
+
     tops = _speed_search(pattern, targets, config.code)
-
-    time_end = time.time()
-    print('Part Time is:', time_end - time_start)
-
-    # plot_simi_stock(tops, all_data, pattern, 'speed_search_' + config.speed_method, codes=config.code)
-
-    if config.speed_method not in ['value_ratio_fft_euclidean']:
-        config.speed_method = 'changed'
-        plot_simi_stock(tops, all_data, pattern, 'std_nav')
+    tops = tops.head(config.nb_similar)
+    plot_simi_stock(tops, all_data, pattern, 'speed_search_' + config.speed_method, codes=config.code)

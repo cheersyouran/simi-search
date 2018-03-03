@@ -68,12 +68,8 @@ def plot_simi_stock(top, data, pattern, filename, codes):
         print(a, b)
         assert a == b, 'calcu error!'
 
-    line_styles = ['k--', 'k:', 'k-.', 'k--', 'k:', 'k-.', 'k:', 'k-.', 'k--', 'k:', 'k-.']
     for i in range(plot_codes.size):
-        if i == plot_codes.size - 1:
-            plt.plot(norm_plot_prices[i], 'r-', label=norm_plot_prices[i], linewidth=1.5)
-        else:
-            plt.plot(norm_plot_prices[i], line_styles[i], label=norm_plot_prices[i], linewidth=1.2)
+        plt.plot(norm_plot_prices[i],  label=norm_plot_prices[i], linewidth=1.5)
 
     plt.xlabel('Time')
     if config.speed_method in ['value_ratio_fft_euclidean', 'rm_vrfft_euclidean']:

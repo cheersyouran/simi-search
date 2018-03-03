@@ -36,31 +36,34 @@ class Config:
 
         self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
 
-        self.market_index = 800
-        self.market_ratio_type = '300_RATIO' if self.market_index == 300 else '800_RATIO'
+        self.speed_method = 'fft_euclidean' # 800
+        self.speed_method = 'value_ratio_fft_euclidean' #300
+        self.speed_method = 'rm_vrfft_euclidean' #800
 
-        self.nb_codes = 300
+        self.market_index = 300
+
+        self.market_ratio_type = '300_RATIO' if self.market_index == 300 else '800_RATIO'
+        self.nb_codes = 300 if self.market_index == 300 else 800
+        # self.nb_codes = 3
+
         self.code = '000001.SZ'
         self.nb_similar = 5 # avergae them as result
-        self.nb_similar_of_each_stock = 200
 
         self.pattern_length = 30
         self.regression_days = 1000
         self.start_date = pd.to_datetime('2014-06-04')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
-        self.speed_method = 'fft_euclidean'
-        self.speed_method = 'value_ratio_fft_euclidean'
-        self.speed_method = 'rm_vrfft_euclidean'
-
         self.fft_level = 3
         self.similarity_method = 'euclidean' #'pearsonr'
 
         self.nb_data = 0
         self.above_ratio = 0.00
+        self.nb_similar_of_each_stock = 200
 
         self.weighted_dist = True
         self.weekily_regression = True
+        self.plot_simi_stock = False
 
         name = str(self.market_index) + '_' + str(self.speed_method) + '_' + str(self.nb_similar)
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr' + name + '.csv'

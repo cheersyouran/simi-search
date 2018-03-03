@@ -53,6 +53,9 @@ def gen_800_fft_data():
     data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
     data = data.dropna()
 
+    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
+    data = data.merge(ratio_300, on=['DATE'], how='left')
+
     ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_800, on=['DATE'], how='left')
 
@@ -99,8 +102,12 @@ def gen_800_RM_VR_fft_data():
 
     data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
     data = data.dropna()
+
     ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_800, on=['DATE'], how='left')
+
+    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
+    data = data.merge(ratio_300, on=['DATE'], how='left')
 
     assert data['800_RATIO'].isnull().any() == False
 
@@ -148,4 +155,8 @@ if __name__ == '__main__':
 
     # insert_market_ratios_to_data()
     # gen_new_800_data()
-    gen_800_RM_VR_fft_data()
+
+    data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'], low_memory=False)
+
+    data.isnull().any()
+
