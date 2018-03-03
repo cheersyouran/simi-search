@@ -167,6 +167,4 @@ def result_check(tops, name, pred_ratio, act_ratio):
 
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
-
-    # queue = Manager().Queue()
     regression_test()

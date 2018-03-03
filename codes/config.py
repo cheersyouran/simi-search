@@ -37,10 +37,10 @@ class Config:
         self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
 
         self.speed_method = 'fft_euclidean' # 800
-        self.speed_method = 'value_ratio_fft_euclidean' #300
-        self.speed_method = 'rm_vrfft_euclidean' #800
+        self.speed_method = 'value_ratio_fft_euclidean' # index = 300;
+        self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场; only for regression_test2
 
-        self.market_index = 300
+        self.market_index = 800
 
         self.market_ratio_type = '300_RATIO' if self.market_index == 300 else '800_RATIO'
         self.nb_codes = 300 if self.market_index == 300 else 800
