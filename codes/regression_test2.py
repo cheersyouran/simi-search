@@ -20,6 +20,7 @@ from codes.speed_search import _speed_search
 from codes.market import market
 from codes.base import plot_nav_curve, norm
 from scipy.stats.stats import pearsonr
+from codes.regression_test1 import regression_test
 
 def get_daily_action_parallel():
 
@@ -119,56 +120,8 @@ def get_daily_action_parallel():
 
     return action, pred_ratio, act_ratio, market_ratio
 
-def regression_test():
-
-    print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
-
-    strategy_net_values = [1.0]
-    act_net_values = [1.0]
-    market_net_values = [1.0]
-    dates = [market.current_date.date()]
-    turnover_rate = 0
-    state = 0
-
-    while config.start_date <= config.regression_end_date:
-
-        print('\n[Start Date]: ' + str(config.start_date.date()))
-        print('[Current Date]: ' + str(market.current_date.date()))
-
-        time_start = time.time()
-
-        action, pred_ratio, act_ratio, market_ratios = get_daily_action_parallel()
-
-        if action == 1:
-            print('[Action]: Buy in!')
-            strategy_net_values.append(strategy_net_values[-1] * (1 + act_ratio))
-            if state == 0:
-                turnover_rate += 1
-                state = 1
-        elif action == -1:
-            print('[Action]: Keep Empty!')
-            strategy_net_values.append(strategy_net_values[-1])
-            if state == 0:
-                turnover_rate += 1
-                state = 0
-        else:
-            raise Exception()
-
-        act_net_values.append(act_net_values[-1] * (1 + act_ratio))
-        market_net_values.append(market_net_values[-1] * (1 + market_ratios))
-
-        if config.weekily_regression == False:
-            market._pass_a_day()
-        else:
-            market._pass_a_week()
-
-        dates.append(market.current_date.date())
-
-        plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, turnover_rate)
-
-        time_end = time.time()
-        print('Search Time:', time_end - time_start)
-
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
-    regression_test()
+
+    config.nb_codes = 3
+    regression_test(get_daily_action_parallel)

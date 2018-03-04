@@ -93,9 +93,15 @@ def get_daily_action_parallel():
 
     return action, pred_ratio, act_ratio, market_ratio
 
-def regression_test():
+def regression_test(get_daily_action):
 
     print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
+    print('CONFIG')
+    print('Start Date:' + str(config.start_date))
+    print('Similar NB:' + str(config.nb_similar))
+    print('Market Ind:' + str(config.market_index))
+    print('Speed Meth:' + str(config.speed_method))
+    print('##################################')
 
     strategy_net_values = [1.0]
     act_net_values = [1.0]
@@ -110,7 +116,7 @@ def regression_test():
 
         time_start = time.time()
 
-        action, pred_ratio, act_ratio, market_ratios = get_daily_action_parallel()
+        action, pred_ratio, act_ratio, market_ratios = get_daily_action()
 
         if action == 1:
             print('[Action]: Buy in!')
@@ -167,4 +173,5 @@ def result_check(tops, name, pred_ratio, act_ratio):
 
 if __name__ == '__main__':
     print('Cpu Core Num: ', os.cpu_count())
-    regression_test()
+    config.nb_codes = 3
+    regression_test(get_daily_action_parallel)

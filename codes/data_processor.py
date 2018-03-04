@@ -150,13 +150,8 @@ def gen_300_fft_from_800_fft():
         data.to_csv(config.HS300_VALUE_RATIO_FFT_DATA, index=False)
 
 if __name__ == '__main__':
-    # config.speed_method = 'rm_vrfft_euclidean'
+    config.speed_method = 'rm_vrfft_euclidean'
     # gen_800_fft_data()
 
     # insert_market_ratios_to_data()
     # gen_new_800_data()
-
-    data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'], low_memory=False)
-
-    data.isnull().any()
-
