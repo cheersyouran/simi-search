@@ -65,7 +65,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     for i in range(config.nb_similar):
         a = weighted_distance(norm_plot_prices[i], norm_plot_prices[-1], config.pattern_length)
         b = top.iloc[i][config.similarity_method]
-        print(a, b)
+        # print(a, b)
         assert a == b, 'calcu error!'
 
     for i in range(plot_codes.size):
@@ -86,16 +86,16 @@ def plot_simi_stock(top, data, pattern, filename, codes):
 
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, turnover_rate):
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
-    plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
+
+    if config.speed_method == 'rm_vrfft_euclidean':
+        plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
+
     plt.plot(dates, market_net_value, 'g-', label=market_net_value, linewidth=1.5)
 
     plt.xlabel('Time')
     plt.ylabel('Net Asset Value')
     plt.legend(['strategy', 'baseline', 'market'], loc='upper left')
-    plt.title("Market: " + str(config.market_index) +
-              "\nTurnover rate: " + str(turnover_rate) +
-              "\nSpeedMethod: " + str(config.speed_method) +
-              "\nNB_similar: " + str(config.nb_similar))
+    plt.title("Turnover rate: " + str(turnover_rate))
     plt.grid(True)
     plt.xticks(fontsize=8, rotation=20)
     plt.ioff()

@@ -36,9 +36,9 @@ class Config:
 
         self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
 
-        self.speed_method = 'fft_euclidean' # 800
-        self.speed_method = 'value_ratio_fft_euclidean' # index = 300;
-        # self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场; only for regression_test2
+        self.speed_method = 'fft_euclidean' # 800; normalization
+        self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
+        # self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场影响，计算相关系数
 
         self.market_index = 300 if self.speed_method == 'value_ratio_fft_euclidean' else 800
 
@@ -46,7 +46,7 @@ class Config:
         self.nb_codes = 300 if self.market_index == 300 else 800
 
         self.code = '000001.SZ'
-        self.nb_similar = 5 # avergae them as result
+        self.nb_similar = 7 # avergae them as result
 
         self.pattern_length = 30
         self.regression_days = 1000
@@ -61,10 +61,10 @@ class Config:
         self.nb_similar_of_each_stock = 200
 
         self.weighted_dist = True
-        self.weekily_regression = True
+        self.weekily_regression = False
         self.plot_simi_stock = False
 
-        name = str(self.start_date.date()) + str(self.market_index) + '_' + str(self.speed_method) + '_' + str(self.nb_similar)
+        name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.market_index) + '_' + str(self.nb_similar)
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr' + name + '.csv'
         self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/pred' + name +'.csv'
         self.regression_result = self.rootPath + '/pic/para_' + name + '.png'
