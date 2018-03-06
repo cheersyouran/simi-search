@@ -35,16 +35,17 @@ def _speed_search(code=None, pattern=None, targets=None):
     tops = sorted_std_diff.sort_values(ascending=True, by=[config.similarity_method])
 
     tops['pattern'] = code
+
+    if config.plot_simi_stock:
+        plot_simi_stock(tops.head(config.nb_similar), all_data, pattern, code + '_simi_result', codes=code)
+
     return tops
 
 def parallel_speed_search(code):
     all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
     tops = _speed_search(pattern=pattern, targets=targets)
+
     tops = tops.head(config.nb_similar)
-
-    if config.plot_simi_stock:
-        plot_simi_stock(tops, all_data, pattern, code + '_simi_result', codes=code)
-
     tops = tops[['CODE', 'DATE', config.similarity_method]]
 
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = 0, 0, 0, 0

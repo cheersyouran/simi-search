@@ -12,8 +12,9 @@ if 'Youran' in config.rootPath:
     config.nb_codes = 3
     config.plot_simi_stock = True
     config.nb_similar_of_each_stock = 200
-    config.nb_similar = 3
-    config.nb_stock_rm_vr_fft = 100
+    config.nb_similar = 5
+    config.nb_stock_rm_vr_fft = 15
+    config.cores = 4
 
 import time
 import numpy as np
@@ -31,7 +32,7 @@ from scipy.stats.stats import pearsonr
 
 def get_daily_action_parallel():
 
-    pool = Pool(processes=os.cpu_count())
+    pool = Pool(processes=config.cores)
     avg_results = pool.map(parallel_speed_search, market.codes)
     pool.close()
 
@@ -103,7 +104,7 @@ def get_daily_action_parallel():
 
 def get_daily_action_parallel_rm_vr():
 
-    pool = Pool(processes=os.cpu_count())
+    pool = Pool(processes=config.cores)
 
     tops = pool.map(_speed_search, market.codes)
 
@@ -213,7 +214,10 @@ def regression_test(get_daily_action):
 
         if action == 1:
             print('[Action]: Buy in!')
-            strategy_net_values.append(strategy_net_values[-1] * (1 + market_ratios))
+            if config.speed_method == 'value_ratio_fft_euclidean':
+                strategy_net_values.append(strategy_net_values[-1] * (1 + market_ratios))
+            else:
+                strategy_net_values.append(strategy_net_values[-1] * (1 + act_ratio))
         elif action == -1:
             print('[Action]: Keep Empty!')
             strategy_net_values.append(strategy_net_values[-1])
@@ -233,6 +237,7 @@ def regression_test(get_daily_action):
             market._pass_a_week()
 
         dates.append(market.current_date.date())
+
         plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, turnover_rate)
 
 if __name__ == '__main__':

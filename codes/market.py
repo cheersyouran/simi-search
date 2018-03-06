@@ -59,7 +59,7 @@ class Market:
             path = config.ZZ800_CODES
         else:
             raise Exception()
-        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
+        self.codes = pd.read_csv(path).sample(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
         self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])

@@ -36,6 +36,8 @@ class Config:
 
         self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
 
+        self.cores = 100
+
         self.speed_method = 'fft_euclidean' # 800; normalization
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
         self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场影响，计算相关系数
@@ -59,9 +61,9 @@ class Config:
 
         self.nb_data = 0
         self.above_ratio = 0.00
-        self.nb_similar_of_each_stock = 250
+        self.nb_similar_of_each_stock = 200
 
-        self.weighted_dist = False
+        self.weighted_dist = True
         self.weight_a = 1
         self.weight_b = 2
         self.alpha = np.multiply([1, 1, 1, 1, 1], 100)
