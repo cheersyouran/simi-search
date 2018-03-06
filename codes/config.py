@@ -38,7 +38,7 @@ class Config:
 
         self.speed_method = 'fft_euclidean' # 800; normalization
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
-        # self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场影响，计算相关系数
+        self.speed_method = 'rm_vrfft_euclidean' # index = 800; 除去市场影响，计算相关系数
 
         self.market_index = 300 if self.speed_method == 'value_ratio_fft_euclidean' else 800
 
@@ -46,11 +46,12 @@ class Config:
         self.nb_codes = 300 if self.market_index == 300 else 800
 
         self.code = '000001.SZ'
-        self.nb_similar = 7 # avergae them as result
+        self.nb_similar = 5 # avergae them as result
+        self.nb_stock_rm_vr_fft = 800 * (self.nb_similar - 2) # 从所有股票的相似票中选择top N
 
         self.pattern_length = 30
-        self.regression_days = 1000
-        self.start_date = pd.to_datetime('2015-01-05')
+        self.regression_days = 300
+        self.start_date = pd.to_datetime('2017-01-03')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.fft_level = 3
@@ -61,10 +62,15 @@ class Config:
         self.nb_similar_of_each_stock = 200
 
         self.weighted_dist = True
+        self.weight_a = 1
+        self.weight_b = 3
+        self.alpha = np.multiply([1, 1, 1, 1, 1], 100)
+        self.beata = np.multiply([1, 1, 1, 1, 1], 1)
+
         self.weekily_regression = False
         self.plot_simi_stock = False
 
-        name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.market_index) + '_' + str(self.nb_similar)
+        name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.nb_similar_of_each_stock) + '_' + str(self.nb_similar)
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr' + name + '.csv'
         self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/pred' + name +'.csv'
         self.regression_result = self.rootPath + '/pic/para_' + name + '.png'

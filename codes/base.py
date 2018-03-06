@@ -6,10 +6,10 @@ from scipy.spatial.distance import euclidean
 from sklearn import preprocessing
 from codes.config import *
 
-def weighted_distance(x, y, length):
+def weighted_distance(x, y, length=config.pattern_length):
     if config.weighted_dist == True:
-        weight = np.arange(1, 2, 1 / length)
-        dist = np.abs(np.multiply(pd.DataFrame(x).values - pd.DataFrame(y).values, weight.reshape(30, 1)))
+        weight = np.arange(config.weight_a, config.weight_b, (config.weight_b - config.weight_a) / length)
+        dist = np.abs(np.multiply(pd.DataFrame(x).values - pd.DataFrame(y).values, weight.reshape(length, 1)))
         return np.sum(dist)
     else:
         return euclidean(x, y)

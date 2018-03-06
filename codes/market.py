@@ -11,6 +11,7 @@ class Market:
         return cls.__instance
 
     def __init__(self):
+        print('Init Market! ', os.getpid())
         self.all_data = None
         self._init_all_data(config.speed_method)
 
@@ -37,7 +38,7 @@ class Market:
             file = config.ZZ800_RM_VR_FFT
 
         if self.all_data is None:
-            print('Init all data! ', os.getpid())
+            print('Init All Data! ', os.getpid())
             self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
             if config.market_index == 300:

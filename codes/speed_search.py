@@ -7,12 +7,8 @@ def _speed_search(code=None, pattern=None, targets=None):
     if pattern is None:
         all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
 
-    if config.speed_method in ['fft_euclidean', 'fft']:
-        ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
-        BETA = np.multiply([1, 1, 1, 1, 1], 1)
-    elif config.speed_method in ['value_ratio_fft_euclidean', 'rm_vrfft_euclidean']:
-        ALPHA = np.multiply([1, 1, 1, 1, 1], 100)
-        BETA = np.multiply([1, 1, 1, 1, 1], 1)
+    ALPHA = config.alpha
+    BETA = config.beata
 
     targets['fft_deg'] = 0
     for i in range(config.fft_level):
@@ -53,20 +49,13 @@ def parallel_speed_search(code):
 
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = 0, 0, 0, 0
 
-    # top 20 similar stocks about this stock
+    # top n similar stocks about a stock
     for _, top in tops.iterrows():
         pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
-        pred1 = pred.head(2)
-        pred_ratios1 += (pred1.iloc[-1]['CLOSE'] - pred1.iloc[0]['CLOSE']) / pred1.iloc[0]['CLOSE']
-
-        pred2 = pred.head(6)
-        pred_ratios5 += (pred2.iloc[-1]['CLOSE'] - pred2.iloc[0]['CLOSE']) / pred2.iloc[0]['CLOSE']
-
-        pred3 = pred.head(11)
-        pred_ratios10 += (pred3.iloc[-1]['CLOSE'] - pred3.iloc[0]['CLOSE']) / pred3.iloc[0]['CLOSE']
-
-        pred4 = pred.head(21)
-        pred_ratios20 += (pred4.iloc[-1]['CLOSE'] - pred4.iloc[0]['CLOSE']) / pred4.iloc[0]['CLOSE']
+        pred_ratios1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
+        pred_ratios5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
+        pred_ratios10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
+        pred_ratios20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
     return [code, pred_ratios1/tops.shape[0], pred_ratios5/tops.shape[0],
             pred_ratios10/tops.shape[0], pred_ratios20/tops.shape[0]]
