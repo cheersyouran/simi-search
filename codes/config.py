@@ -47,7 +47,7 @@ class Config:
 
         self.code = '000001.SZ'
         self.nb_similar = 5 # avergae them as result
-        self.nb_stock_rm_vr_fft = 800 * (self.nb_similar - 2) # 从所有股票的相似票中选择top N
+        self.nb_stock_rm_vr_fft = 4000 # 从所有股票的相似票中选择top N
 
         self.pattern_length = 30
         self.regression_days = 300
@@ -59,18 +59,18 @@ class Config:
 
         self.nb_data = 0
         self.above_ratio = 0.00
-        self.nb_similar_of_each_stock = 200
+        self.nb_similar_of_each_stock = 250
 
-        self.weighted_dist = True
+        self.weighted_dist = False
         self.weight_a = 1
-        self.weight_b = 3
+        self.weight_b = 2
         self.alpha = np.multiply([1, 1, 1, 1, 1], 100)
         self.beata = np.multiply([1, 1, 1, 1, 1], 1)
 
         self.weekily_regression = False
         self.plot_simi_stock = False
 
-        name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.nb_similar_of_each_stock) + '_' + str(self.nb_similar)
+        name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.nb_stock_rm_vr_fft) + '_' + str(self.nb_similar)
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr' + name + '.csv'
         self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/pred' + name +'.csv'
         self.regression_result = self.rootPath + '/pic/para_' + name + '.png'

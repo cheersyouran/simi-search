@@ -13,7 +13,7 @@ if 'Youran' in config.rootPath:
     config.plot_simi_stock = True
     config.nb_similar_of_each_stock = 200
     config.nb_similar = 3
-    config.nb_stock_rm_vr_fft == 100
+    config.nb_stock_rm_vr_fft = 100
 
 import time
 import numpy as np
@@ -114,8 +114,9 @@ def get_daily_action_parallel_rm_vr():
     tops = tops.head(config.nb_stock_rm_vr_fft)
 
     def apply(x):
+        x_ = x.head(config.nb_similar)
         pred_ratio1, pred_ratio5, pred_ratio10, pred_ratio20 = 0, 0, 0, 0
-        for _, top in x.iterrows():
+        for _, top in x_.iterrows():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
             pred_ratio1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
             pred_ratio5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
@@ -145,7 +146,7 @@ def get_daily_action_parallel_rm_vr():
         pred_ratios20.append(avg_result[3])
         codes.append(i)
 
-    print('[Codes left] ', codes.size)
+    print('[Codes left] ', len(codes))
     pred_act_result = pd.DataFrame(OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date,
                                      'PRED1': pred_ratios1, 'PRED5': pred_ratios5,
                                      'PRED10': pred_ratios10, 'PRED20': pred_ratios20,
@@ -202,7 +203,7 @@ def regression_test(get_daily_action):
     market_net_values = [1.0]
     dates = [market.current_date.date()]
     turnover_rate = 0
-    last_action = 0
+    last_action = -1
     while config.start_date <= config.regression_end_date:
 
         print('\n[Start Date]: ' + str(config.start_date.date()))
@@ -213,17 +214,15 @@ def regression_test(get_daily_action):
         if action == 1:
             print('[Action]: Buy in!')
             strategy_net_values.append(strategy_net_values[-1] * (1 + market_ratios))
-            if last_action == 0:
-                turnover_rate += 1
-            last_action = action
         elif action == -1:
             print('[Action]: Keep Empty!')
             strategy_net_values.append(strategy_net_values[-1])
-            if last_action == -1:
-                turnover_rate += 1
-            last_action = action
         else:
             raise Exception()
+
+        if last_action != action:
+            turnover_rate += 1
+        last_action = action
 
         act_net_values.append(act_net_values[-1] * (1 + act_ratio))
         market_net_values.append(market_net_values[-1] * (1 + market_ratios))
