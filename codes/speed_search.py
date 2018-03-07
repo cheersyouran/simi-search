@@ -3,9 +3,8 @@ from scipy.stats.stats import pearsonr
 from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
 
-def _speed_search(code=None, pattern=None, targets=None):
-    if pattern is None:
-        all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
+def find_similar_of_a_stock(code):
+    all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
 
     ALPHA = config.alpha
     BETA = config.beata
@@ -35,36 +34,39 @@ def _speed_search(code=None, pattern=None, targets=None):
     tops = sorted_std_diff.sort_values(ascending=True, by=[config.similarity_method])
 
     tops['pattern'] = code
-
     if config.plot_simi_stock:
-        plot_simi_stock(tops.head(config.nb_similar), all_data, pattern, code + '_simi_result', codes=code)
+        plot_simi_stock(tops.head(config.nb_similar_make_prediction), all_data, pattern, code + '_simi_result', codes=code)
 
     return tops
 
-def parallel_speed_search(code):
-    all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
-    tops = _speed_search(pattern=pattern, targets=targets)
-
-    tops = tops.head(config.nb_similar)
-    tops = tops[['CODE', 'DATE', config.similarity_method]]
-
+def predict_stock_base_on_similars(code):
+    tops = find_similar_of_a_stock(code)
+    tops = tops.head(config.nb_similar_make_prediction)
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = 0, 0, 0, 0
 
-    # top n similar stocks about a stock
     for _, top in tops.iterrows():
         pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
-        pred_ratios1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
-        pred_ratios5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
-        pred_ratios10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
-        pred_ratios20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE']
 
-    return [code, pred_ratios1/tops.shape[0], pred_ratios5/tops.shape[0],
-            pred_ratios10/tops.shape[0], pred_ratios20/tops.shape[0]]
+        if config.rm_market_bias == True:
+            pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
+            pred_market_ratios5 = market.get_span_market_ratio(pred, 5)
+            pred_market_ratios10 = market.get_span_market_ratio(pred, 10)
+            pred_market_ratios20 = market.get_span_market_ratio(pred, 20)
+        else:
+            pred_market_ratios1, pred_market_ratios5, pred_market_ratios10, pred_market_ratios20 = 0, 0, 0, 0
+
+        pred_ratios1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios1
+        pred_ratios5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios5
+        pred_ratios10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
+        pred_ratios20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
+
+    size = tops.shape[0]
+    return [code, pred_ratios1/size, pred_ratios5/size, pred_ratios10/size, pred_ratios20/size]
 
 if __name__ == '__main__':
 
     all_data, pattern, targets = market.get_historical_data(config.start_date, code=config.code)
 
-    tops = _speed_search(pattern, targets, config.code)
+    tops = find_similar_of_a_stock(pattern, targets, config.code)
     tops = tops.head(config.nb_similar)
     plot_simi_stock(tops, all_data, pattern, 'speed_search_' + config.speed_method, codes=config.code)

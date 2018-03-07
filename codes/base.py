@@ -15,17 +15,19 @@ def weighted_distance(x, y, length=config.pattern_length):
         return euclidean(x, y)
 
 def norm(X, ratio=None):
-    if config.speed_method in ['value_ratio_fft_euclidean', 'changed']:
-        result = X / pd.DataFrame(X).iloc[0][0]
-    elif config.speed_method in ['fft_euclidean']:
-        result = preprocessing.scale(X)
-    elif config.speed_method in ['rm_vrfft_euclidean']:
+    if config.speed_method in ['value_ratio_fft_euclidean']:
+        if config.rm_market_bias == False:
+            result = X / pd.DataFrame(X).iloc[0][0]
+    elif config.speed_method == 'rm_market_fft':
         if ratio is None:
             raise Exception('No Ratios!')
         result_ = X / pd.DataFrame(X).iloc[0][0]
         ratio_ = (ratio / 100) + 1
         r = ratio_ / pd.DataFrame(ratio_).iloc[0][0]
         result = np.divide(result_, r)
+
+    elif config.speed_method in ['fft_euclidean']:
+        result = preprocessing.scale(X)
 
     return result
 
@@ -35,14 +37,14 @@ def plot_simi_stock(top, data, pattern, filename, codes):
         plot_codes = np.append(top['CODE'].values, codes)
         plot_dates = list(top['DATE'].values)
         plot_dates.append(None)
-        plot_prices = np.zeros([config.nb_similar + 1, config.pattern_length])
+        plot_prices = np.zeros([config.nb_similar_make_prediction + 1, config.pattern_length])
         plot_legend = list()
-        plot_market_ratio = np.zeros([config.nb_similar + 1, config.pattern_length])
+        plot_market_ratio = np.zeros([config.nb_similar_make_prediction + 1, config.pattern_length])
         return plot_codes, plot_dates, plot_prices, plot_legend, plot_market_ratio
 
     plot_codes, plot_dates, plot_prices, plot_legend, plot_market_ratio = init_plot_data()
 
-    for i in range(config.nb_similar):
+    for i in range(config.nb_similar_make_prediction):
         plot_quote = data[data['CODE'] == plot_codes[i]]
         plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(config.pattern_length)
         plot_prices[i] = plot_quote['CLOSE'].values
@@ -50,16 +52,14 @@ def plot_simi_stock(top, data, pattern, filename, codes):
             str(plot_codes[i]) + "," +
             str(config.similarity_method) + ":" +
             str(top.iloc[i][config.similarity_method]))
-        if config.speed_method == 'rm_vrfft_euclidean':
-            plot_market_ratio[i] = plot_quote[config.market_ratio_type].values
+        plot_market_ratio[i] = plot_quote[config.market_ratio_type].values
 
     plot_prices[-1] = pattern['CLOSE'].values
-    if config.speed_method == 'rm_vrfft_euclidean':
-        plot_market_ratio[-1] = pattern[config.market_ratio_type].values
+    plot_market_ratio[-1] = pattern[config.market_ratio_type].values
 
     plot_dates[-1] = pattern['DATE'].iloc[-1]
     plot_legend.append(str(plot_codes[-1]))
-    norm_plot_prices = [norm(plot_prices[i], plot_market_ratio[i]) for i in range(config.nb_similar + 1)]
+    norm_plot_prices = [norm(plot_prices[i], plot_market_ratio[i]) for i in range(config.nb_similar_make_prediction + 1)]
 
     # assert for result checking
     for i in range(config.nb_similar):
@@ -72,10 +72,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
         plt.plot(norm_plot_prices[i],  label=norm_plot_prices[i], linewidth=1.5)
 
     plt.xlabel('Time')
-    if config.speed_method in ['value_ratio_fft_euclidean', 'rm_vrfft_euclidean']:
-        plt.ylabel('NAV')
-    else:
-        plt.ylabel('Close Price')
+    plt.ylabel('NAV')
     plt.legend(plot_legend, loc='upper left')
     plt.title("Similarity Search[" + plot_codes[-1] + "]\n")
     plt.grid(True)
@@ -86,10 +83,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
 
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, turnover_rate):
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
-
-    if config.speed_method == 'rm_vrfft_euclidean':
-        plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
-
+    plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
     plt.plot(dates, market_net_value, 'g-', label=market_net_value, linewidth=1.5)
 
     plt.xlabel('Time')

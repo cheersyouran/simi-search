@@ -34,7 +34,7 @@ def gen_800_data():
     data = data[data['CODE'].isin(codes.values)]
     data.to_csv(config.ZZ800_DATA, index=False)
 
-def gen_800_fft_data():
+def gen_800_fft_data(path):
     print('gen 800 fft data...')
     print(config.speed_method)
 
@@ -55,25 +55,20 @@ def gen_800_fft_data():
 
     ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_300, on=['DATE'], how='left')
-
     ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_800, on=['DATE'], how='left')
 
     assert data['800_RATIO'].isnull().any() == False
+    assert data['300_RATIO'].isnull().any() == False
 
     for i in range(config.fft_level):
         ind = str(i+1)
         data['fft'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')
         data['deg'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')
 
-    if config.speed_method == 'fft_euclidean':
-        data.to_csv(config.ZZ800_FFT_DATA, index=False)
-    elif config.speed_method == 'value_ratio_fft_euclidean':
-        data.to_csv(config.ZZ800_VALUE_RATIO_FFT_DATA, index=False)
-    elif config.speed_method == 'rm_vrfft_euclidean':
-        data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    data.to_csv(path, index=False)
 
-def gen_800_RM_VR_fft_data():
+def gen_800_RM_VR_fft_data(path):
     print('gen 800 remove-market-ratio fft data...')
     print(config.speed_method)
 
@@ -105,18 +100,18 @@ def gen_800_RM_VR_fft_data():
 
     ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_800, on=['DATE'], how='left')
-
     ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
     data = data.merge(ratio_300, on=['DATE'], how='left')
 
     assert data['800_RATIO'].isnull().any() == False
+    assert data['300_RATIO'].isnull().any() == False
 
     for i in range(config.fft_level):
         ind = str(i+1)
         data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')['CLOSE'].values
         data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')['CLOSE'].values
 
-    data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    data.to_csv(path, index=False)
 
 def gen_new_800_data():
     df1 = pd.read_csv('1.csv')
@@ -149,9 +144,26 @@ def gen_300_fft_from_800_fft():
     elif config.speed_method == 'value_ratio_fft_euclidean':
         data.to_csv(config.HS300_VALUE_RATIO_FFT_DATA, index=False)
 
+def add_market_ratio():
+    data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'], low_memory=False)
+
+    ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
+    data = data.merge(ratio_800, on=['DATE'], how='left')
+
+    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
+    data = data.merge(ratio_300, on=['DATE'], how='left')
+
+    data.to_csv(config.ZZ800_FFT_DATA, index=False)
+
 if __name__ == '__main__':
-    config.speed_method = 'rm_vrfft_euclidean'
+    gen_800_fft_data(config.ZZ800_FFT_DATA+'.new')
+    gen_800_fft_data(config.ZZ800_VALUE_RATIO_FFT_DATA+'.new')
+
+    gen_800_RM_VR_fft_data(config.ZZ800_RM_FFT+'.new')
+    gen_800_RM_VR_fft_data(config.ZZ800_RM_VR_FFT+'.new')
+    # add_market_ratio()
     # gen_800_fft_data()
 
     # insert_market_ratios_to_data()
     # gen_new_800_data()
+

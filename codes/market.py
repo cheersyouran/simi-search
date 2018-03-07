@@ -1,6 +1,7 @@
 from codes.config import config
 import os
 import pandas as pd
+import numpy as np
 from memory_profiler import profile
 
 class Market:
@@ -34,15 +35,12 @@ class Market:
             file = config.ZZ800_FFT_DATA
         elif speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
-        elif speed_method == 'rm_vrfft_euclidean':
+        elif speed_method == 'rm_market_fft':
             file = config.ZZ800_RM_VR_FFT
 
         if self.all_data is None:
             print('Init All Data! ', os.getpid())
             self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
-
-            if config.market_index == 300:
-                self.all_data = self.all_data[self.all_data['CODE'].str.contains("")]
 
     def _init_ratios(self):
         if config.market_index == 800:
@@ -59,7 +57,7 @@ class Market:
             path = config.ZZ800_CODES
         else:
             raise Exception()
-        self.codes = pd.read_csv(path).sample(config.nb_codes).values.flatten()
+        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
         self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
@@ -85,10 +83,6 @@ class Market:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date) & (self.all_data['DATE'] >= start_date)]
 
         self.pattern = self.pattern.reset_index(drop=True)
-
-        if config.nb_data != 0:
-            targets = targets.head(config.nb_data)
-
         self.targets = targets
 
         return self.all_data, self.pattern, self.targets
@@ -117,5 +111,10 @@ class Market:
     def pass_days(self, date, nb_day):
         date_ = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > date].head(nb_day).tail(1).values[0][0])
         return date_
+
+    def get_span_market_ratio(self, df, n):
+        array = np.cumprod(df[config.market_ratio_type] / 100 + 1).values - 1
+        return array[n]
+
 
 market = Market()
