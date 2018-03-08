@@ -62,7 +62,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     norm_plot_prices = [norm(plot_prices[i], plot_market_ratio[i]) for i in range(config.nb_similar_make_prediction + 1)]
 
     # assert for result checking
-    for i in range(config.nb_similar):
+    for i in range(config.nb_similar_make_prediction):
         a = weighted_distance(norm_plot_prices[i], norm_plot_prices[-1], config.pattern_length)
         b = top.iloc[i][config.similarity_method]
         # print(a, b)

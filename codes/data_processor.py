@@ -51,15 +51,6 @@ def gen_800_fft_data(path):
         return result
 
     data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
-    data = data.dropna()
-
-    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_300, on=['DATE'], how='left')
-    ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_800, on=['DATE'], how='left')
-
-    assert data['800_RATIO'].isnull().any() == False
-    assert data['300_RATIO'].isnull().any() == False
 
     for i in range(config.fft_level):
         ind = str(i+1)
@@ -96,15 +87,6 @@ def gen_800_RM_VR_fft_data(path):
         return result
 
     data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
-    data = data.dropna()
-
-    ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_800, on=['DATE'], how='left')
-    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_300, on=['DATE'], how='left')
-
-    assert data['800_RATIO'].isnull().any() == False
-    assert data['300_RATIO'].isnull().any() == False
 
     for i in range(config.fft_level):
         ind = str(i+1)
@@ -145,25 +127,35 @@ def gen_300_fft_from_800_fft():
         data.to_csv(config.HS300_VALUE_RATIO_FFT_DATA, index=False)
 
 def add_market_ratio():
-    data = pd.read_csv(config.ZZ800_FFT_DATA, parse_dates=['DATE'], low_memory=False)
+    data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    index_ratio = pd.read_csv(config.MARKET_RATIO, parse_dates=['DATE'])
+    data = data.merge(index_ratio, on=['DATE'], how='left')
+    data.to_csv(config.ZZ800_DATA, index=False)
 
-    ratio_800 = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_800, on=['DATE'], how='left')
+def read_excel():
+    df = pd.read_csv(config.ZZ800_DATA).set_index(['Date'])
+    result = pd.DataFrame(columns=['DATE', 'CODE', 'CLOSE', '800_RATIO', '300_RATIO'])
 
-    ratio_300 = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
-    data = data.merge(ratio_300, on=['DATE'], how='left')
+    df1 = df.iloc[:, 0:800]
+    df2 = df.iloc[:, 800:802]
+    for _, item in df1.iteritems():
+        i = pd.DataFrame()
+        i['DATE'] = item.index.values
+        i['CODE'] = item.name
+        i['CLOSE'] = item.values
+        result = result.append(i)
 
-    data.to_csv(config.ZZ800_FFT_DATA, index=False)
+    df2 = df2.reset_index()
+    data = result.merge(df2, left_on=['DATE'], right_on=['Date'], how='left')
+    data = data[['CLOSE', 'CODE', 'DATE', '000906.SH', '000300.SH']]
+    data.columns = ['CLOSE', 'CODE', 'DATE', '800_MARKET', '300_MARKET']
+    data.to_csv('800_data.csv', index=False)
 
 if __name__ == '__main__':
-    gen_800_fft_data(config.ZZ800_FFT_DATA+'.new')
-    gen_800_fft_data(config.ZZ800_VALUE_RATIO_FFT_DATA+'.new')
-
-    gen_800_RM_VR_fft_data(config.ZZ800_RM_FFT+'.new')
-    gen_800_RM_VR_fft_data(config.ZZ800_RM_VR_FFT+'.new')
     # add_market_ratio()
-    # gen_800_fft_data()
+    # read_excel()
+    # gen_800_fft_data(config.ZZ800_FFT_DATA)
+    # gen_800_fft_data(config.ZZ800_VALUE_RATIO_FFT_DATA)
 
-    # insert_market_ratios_to_data()
-    # gen_new_800_data()
-
+    # gen_800_RM_VR_fft_data(config.ZZ800_RM_FFT)
+    gen_800_RM_VR_fft_data(config.ZZ800_RM_VR_FFT)

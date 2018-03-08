@@ -26,12 +26,11 @@ class Config:
         self.ZZ800_DATA = self.rootPath + '/data/800_data.csv'
         self.ZZ800_FFT_DATA = self.rootPath + '/data/800_fft_data.csv'
         self.ZZ800_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/800_value_ratio_fft_data.csv'
-        self.ZZ800_MARKET_RATIO = self.rootPath + '/data/800_ratio.csv'
         self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
         self.ZZ800_RM_FFT = self.rootPath + '/data/800_rm_fft.csv'
         self.ZZ800_RM_VR_FFT = self.rootPath + '/data/800_rm_vr_fft.csv'
 
-        self.HS300_MARKET_RATIO = self.rootPath + '/data/300_ratio.csv'
+        self.MARKET_RATIO = self.rootPath + '/data/index_ratio.csv'
         self.HS300_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/300_value_ratio_fft_data.csv'
         self.HS300_FFT_DATA = self.rootPath + '/data/300_fft_data.csv'
         self.HS300_CODES = self.rootPath + '/data/300_codes.csv'
@@ -53,7 +52,7 @@ class Config:
         self.start_date = pd.to_datetime('2015-01-01')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
-        self.fft_level = 3
+        self.fft_level = 5
         self.similarity_method = 'euclidean' #'pearsonr'
 
         self.market_ratio_type = '300_RATIO' if self.market_index == 300 else '800_RATIO'
