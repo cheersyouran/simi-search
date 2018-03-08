@@ -19,9 +19,6 @@ class Market:
         self.codes = None
         self._init_codes()
 
-        self.ratios = None
-        self._init_ratios()
-
         self.trading_days = None
         self._init_trading_days()
 
@@ -42,14 +39,6 @@ class Market:
             print('Init All Data! ', os.getpid())
             self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
-    def _init_ratios(self):
-        if config.market_index == 800:
-            self.ratios = pd.read_csv(config.ZZ800_MARKET_RATIO, parse_dates=['DATE'])
-        elif config.market_index == 300:
-            self.ratios = pd.read_csv(config.HS300_MARKET_RATIO, parse_dates=['DATE'])
-        else:
-            raise Exception()
-
     def _init_codes(self):
         if config.market_index == 300:
             path = config.HS300_CODES
@@ -57,7 +46,7 @@ class Market:
             path = config.ZZ800_CODES
         else:
             raise Exception()
-        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
+        self.codes = pd.read_csv(path).tail(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
         self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])

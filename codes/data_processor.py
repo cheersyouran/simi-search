@@ -130,8 +130,8 @@ def add_market_ratio():
     data.to_csv(config.ZZ800_DATA, index=False)
 
 def read_excel():
-    df = pd.read_csv(config.ZZ800_DATA).set_index(['Date'])
-    result = pd.DataFrame(columns=['DATE', 'CODE', 'CLOSE', '800_RATIO', '300_RATIO'])
+    df = pd.read_csv(config.rootPath + '/data/800_data_merged.csv').set_index(['Date'])
+    result = pd.DataFrame(columns=['DATE', 'CODE', 'CLOSE'])
 
     df1 = df.iloc[:, 0:800]
     df2 = df.iloc[:, 800:802]
@@ -148,9 +148,6 @@ def read_excel():
     data.columns = ['CLOSE', 'CODE', 'DATE', '800_MARKET', '300_MARKET']
     data.to_csv('800_data.csv', index=False)
 
-def split_800_data():
-    pd.read_csv(config.ZZ800_DATA)
-
 if __name__ == '__main__':
     # add_market_ratio()
     # read_excel()
@@ -158,4 +155,4 @@ if __name__ == '__main__':
     # gen_800_fft_data(config.ZZ800_VALUE_RATIO_FFT_DATA)
 
     # gen_800_RM_VR_fft_data(config.ZZ800_RM_FFT)
-    gen_800_RM_VR_fft_data(config.ZZ800_RM_VR_FFT)
+    gen_800_RM_VR_fft_data(config.rootPath + '/data/800_rm_vr_fft1.csv')

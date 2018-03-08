@@ -25,7 +25,9 @@ def find_similar_of_a_stock(code):
 
     distances = []
     for _, ith in sorted_std_diff.iterrows():
-        result = targets[(targets['CODE'] == ith['CODE']) & (targets['DATE'] <= ith['DATE'])].tail(config.pattern_length)
+        result = all_data[(all_data['CODE'] == ith['CODE']) & (all_data['DATE'] <= ith['DATE'])].tail(config.pattern_length)
+        if result.shape[0] != 30:
+            print(ith['CODE'],  ith['DATE'])
         distances.append(weighted_distance(norm(result['CLOSE'], result[config.market_ratio_type]),
                                            norm(pattern['CLOSE'], pattern[config.market_ratio_type]),
                                            config.pattern_length))

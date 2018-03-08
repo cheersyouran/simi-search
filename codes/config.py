@@ -40,7 +40,7 @@ class Config:
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
         self.speed_method = 'rm_market_fft' #value_ratio 除去市场
         self.rm_market_bias = True if self.speed_method == 'rm_market_fft' else False
-        self.market_index = 300
+        self.market_index = 800
 
         self.code = '000001.SZ'
         self.nb_similar_make_prediction = 20 # avergae them as a pred
@@ -48,8 +48,8 @@ class Config:
         self.nb_similar_of_each_stock = 200
 
         self.pattern_length = 30
-        self.regression_days = 300
-        self.start_date = pd.to_datetime('2015-01-01')
+        self.regression_days = 3000
+        self.start_date = pd.to_datetime('2010-01-04')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.fft_level = 5
