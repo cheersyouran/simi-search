@@ -1,4 +1,3 @@
-#encoding:utf-8
 import sys
 import os
 
@@ -63,35 +62,33 @@ def gen_800_RM_VR_fft_data(path):
     print('gen 800 remove-market-ratio fft data...')
     print(config.speed_method)
 
-    def rolling_aply_fft(x, freq, method, data):
-        global count
-        x_test = data['CLOSE'].iloc[count:count+config.pattern_length].values
-        if ~((x_test - x) == 0).any():
-            raise Exception('Error!')
-        ratio = data['800_RATIO'].iloc[count:count + config.pattern_length].values
-        x_ = norm(x, ratio)
-        count += 1
-
-        ffts = np.fft.fft(x_)/len(x_)
-        if method == 'fft':
-            return np.abs(ffts[freq])
-        elif method == 'deg':
-            return np.rad2deg(np.angle(ffts[freq]))
-
-    def apply(data, rolling_aply, freq, method):
-        global count
-        count = 0
+    def apply(data, freq, method):
         result = data.copy()
-        result['CLOSE'] = data['CLOSE'].rolling(window=config.pattern_length).apply(func=rolling_aply, args=(freq, method, data))
+        fft = []
+        for i in range(data.shape[0]):
+            if i < 30:
+                fft.append(None)
+            else:
+                close = data['CLOSE'].iloc[i - 30: i].values
+                market = data['800_RATIO'].iloc[i - 30: i].values
+                x_ = norm(close, market)
+                ffts = np.fft.fft(x_) / len(x_)
+                if method == 'fft':
+                    fft.append(np.abs(ffts[freq]))
+                elif method == 'deg':
+                    fft.append(np.rad2deg(np.angle(ffts[freq])))
+
+        result['CLOSE'] = fft
         result['800_RATIO'] = data['800_RATIO']
         return result
 
-    data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    data = pd.read_csv(config.ZZ800_DATA, low_memory=False)
 
     for i in range(config.fft_level):
         ind = str(i+1)
-        data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')['CLOSE'].values
-        data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')['CLOSE'].values
+        data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='fft')['CLOSE'].values
+        data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='deg')['CLOSE'].values
+        print(ind)
 
     data.to_csv(path, index=False)
 
@@ -150,6 +147,9 @@ def read_excel():
     data = data[['CLOSE', 'CODE', 'DATE', '000906.SH', '000300.SH']]
     data.columns = ['CLOSE', 'CODE', 'DATE', '800_MARKET', '300_MARKET']
     data.to_csv('800_data.csv', index=False)
+
+def split_800_data():
+    pd.read_csv(config.ZZ800_DATA)
 
 if __name__ == '__main__':
     # add_market_ratio()
