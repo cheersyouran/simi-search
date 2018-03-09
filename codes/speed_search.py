@@ -6,6 +6,9 @@ from codes.base import plot_simi_stock, norm, weighted_distance
 def find_similar_of_a_stock(code):
     all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
 
+    if pattern.isnull().any().any():
+        return None
+
     ALPHA = config.alpha
     BETA = config.beata
 
@@ -43,13 +46,17 @@ def find_similar_of_a_stock(code):
 
 def predict_stock_base_on_similars(code):
     tops = find_similar_of_a_stock(code)
+
+    if tops is None:
+        return None
+
     tops = tops.head(config.nb_similar_make_prediction)
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = 0, 0, 0, 0
 
     for _, top in tops.iterrows():
         pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
 
-        if config.rm_market_bias == True:
+        if config.speed_method in ['rm_market_vr_fft']:
             pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
             pred_market_ratios5 = market.get_span_market_ratio(pred, 5)
             pred_market_ratios10 = market.get_span_market_ratio(pred, 10)

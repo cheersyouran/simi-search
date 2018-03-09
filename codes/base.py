@@ -16,9 +16,8 @@ def weighted_distance(x, y, length=config.pattern_length):
 
 def norm(X, ratio=None):
     if config.speed_method in ['value_ratio_fft_euclidean']:
-        if config.rm_market_bias == False:
-            result = X / pd.DataFrame(X).iloc[0][0]
-    elif config.speed_method == 'rm_market_fft':
+        result = X / pd.DataFrame(X).iloc[0][0]
+    elif config.speed_method == 'rm_market_vr_fft':
         if ratio is None:
             raise Exception('No Ratios!')
         result_ = X / pd.DataFrame(X).iloc[0][0]

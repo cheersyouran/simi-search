@@ -151,8 +151,13 @@ def read_excel():
 if __name__ == '__main__':
     # add_market_ratio()
     # read_excel()
-    # gen_800_fft_data(config.ZZ800_FFT_DATA)
-    # gen_800_fft_data(config.ZZ800_VALUE_RATIO_FFT_DATA)
+    config.speed_method = 'fft_euclidean'
+    gen_800_fft_data(config.rootPath + '/data/800_fft_data1.csv')
+
+    config.speed_method = 'value_ratio_fft_euclidean'
+    gen_800_fft_data(config.rootPath + '/data/800_value_ratio_fft_data1.csv')
 
     # gen_800_RM_VR_fft_data(config.ZZ800_RM_FFT)
-    gen_800_RM_VR_fft_data(config.rootPath + '/data/800_rm_vr_fft1.csv')
+    # gen_800_RM_VR_fft_data(config.rootPath + '/data/800_rm_vr_fft1.csv')
+
+    print('')

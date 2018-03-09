@@ -35,6 +35,7 @@ def make_prediction():
     pool = Pool(processes=config.cores)
     all_stocks_avg_pred_results = pool.map(predict_stock_base_on_similars, market.codes)
     pool.close()
+    all_stocks_avg_pred_results = [x for x in all_stocks_avg_pred_results if x is not None]
 
     pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20 = [], [], [], []
     act_ratios1, act_ratios5, act_ratios10, act_ratios20, codes = [], [], [], [], []
@@ -49,7 +50,7 @@ def make_prediction():
 
         act = market.get_data(start_date=market.current_date, code=avg_pred_result[0])
 
-        if config.rm_market_bias == True:
+        if config.speed_method in ['rm_market_vr_fft']:
             act_market_ratios1 = market.get_span_market_ratio(act, 1)
             act_market_ratios5 = market.get_span_market_ratio(act, 5)
             act_market_ratios10 = market.get_span_market_ratio(act, 10)
@@ -86,7 +87,7 @@ def make_prediction2():
         for index, top in x_.iterrows():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
 
-            if config.rm_market_bias == True:
+            if config.speed_method in ['rm_market_vr_fft']:
                 pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
                 pred_market_ratios5 = market.get_span_market_ratio(pred, 5)
                 pred_market_ratios10 = market.get_span_market_ratio(pred, 10)
@@ -100,7 +101,7 @@ def make_prediction2():
             pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
 
         act = market.get_data(start_date=market.current_date, code=pattern_code)
-        if config.rm_market_bias == True:
+        if config.speed_method in ['rm_market_vr_fft']:
             act_market_ratios1 = market.get_span_market_ratio(pred, 1)
             act_market_ratios5 = market.get_span_market_ratio(pred, 5)
             act_market_ratios10 = market.get_span_market_ratio(pred, 10)
@@ -232,7 +233,6 @@ if __name__ == '__main__':
     print('Similar NB: ' + str(config.nb_similar_make_prediction))
     print('Market Ind: ' + str(config.market_index))
     print('Speed Meth: ' + str(config.speed_method))
-    print('RM Market : ' + str(config.rm_market_bias))
     print('#####################################')
 
     # regression_test(make_prediction2)

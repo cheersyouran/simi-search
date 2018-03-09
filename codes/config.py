@@ -38,8 +38,8 @@ class Config:
 
         self.speed_method = 'fft_euclidean' # 800and300; normalization
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
-        self.speed_method = 'rm_market_fft' #value_ratio 除去市场
-        self.rm_market_bias = True if self.speed_method == 'rm_market_fft' else False
+        self.speed_method = 'rm_market_fft'
+        self.speed_method = 'rm_market_vr_fft' #value_ratio 除去市场
         self.market_index = 800
 
         self.code = '000001.SZ'
@@ -69,7 +69,8 @@ class Config:
         self.cores = 100
 
         name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + \
-               str(self.rm_market_bias) + '_' + str(self.nb_similar_make_prediction)
+               str(self.market_index) + '_' + str(self.nb_similar_make_prediction)
+
         self.PEARSON_CORR_RESLUT = self.rootPath + '/output/corr' + name + '.csv'
         self.PRDT_AND_ACT_RESULT = self.rootPath + '/output/pred' + name +'.csv'
         self.regression_result = self.rootPath + '/pic/para_' + name + '.png'

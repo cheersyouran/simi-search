@@ -32,7 +32,7 @@ class Market:
             file = config.ZZ800_FFT_DATA
         elif speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
-        elif speed_method == 'rm_market_fft':
+        elif speed_method == 'rm_market_vr_fft':
             file = config.ZZ800_RM_VR_FFT
 
         if self.all_data is None:
@@ -46,7 +46,7 @@ class Market:
             path = config.ZZ800_CODES
         else:
             raise Exception()
-        self.codes = pd.read_csv(path).tail(config.nb_codes).values.flatten()
+        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
         self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
@@ -63,6 +63,7 @@ class Market:
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         targets = targets[targets['DATE'] < market.current_date.date()]
+        targets = targets[targets['DATE'] > '2004-12-31']
 
         if start_date == None and end_date != None:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)
@@ -73,6 +74,7 @@ class Market:
 
         self.pattern = self.pattern.reset_index(drop=True)
         self.targets = targets
+        self.targets = self.targets.dropna()
 
         return self.all_data, self.pattern, self.targets
 
