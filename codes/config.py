@@ -34,7 +34,7 @@ class Config:
         self.HS300_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/300_value_ratio_fft_data.csv'
         self.HS300_FFT_DATA = self.rootPath + '/data/300_fft_data.csv'
         self.HS300_CODES = self.rootPath + '/data/300_codes.csv'
-        self.TRAINING_DAY = self.rootPath + '/data/training_day.csv'
+        self.TRAINING_DAY = self.rootPath + '/data/trading_day.csv'
 
         self.speed_method = 'fft_euclidean' # 800and300; normalization
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
@@ -61,7 +61,7 @@ class Config:
         self.weighted_dist = True
         self.weight_a = 1
         self.weight_b = 2
-        self.alpha = np.multiply([1, 1, 1, 1, 1], 50)
+        self.alpha = np.multiply([1, 1, 1, 1, 1], 40)
         self.beata = np.multiply([1, 1, 1, 1, 1], math.pi / 180)
 
         self.weekily_regression = True

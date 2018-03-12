@@ -18,19 +18,18 @@ def find_similar_of_a_stock(code):
         p_fft = pattern['fft' + index].tail(1).values
         p_deg = pattern['deg' + index].tail(1).values
 
-        targets['fft_' + index] = (targets['fft' + index] - p_fft).abs() * ALPHA[i]
-        targets['deg_' + index] = (targets['deg' + index] - p_deg).abs() * BETA[i]
+        targets['fft' + index] = (targets['fft' + index] - p_fft).abs() * ALPHA[i]
+        targets['deg' + index] = (targets['deg' + index] - p_deg).abs() * BETA[i]
 
-        targets['fft_deg'] += targets['fft_' + index] + targets['deg_' + index]
+        targets['fft_deg'] += targets['fft' + index] + targets['deg' + index]
 
     sorted_std_diff = targets.sort_values(ascending=True, by=['fft_deg'])
     sorted_std_diff = sorted_std_diff.head(config.nb_similar_of_each_stock)
 
     distances = []
+    tmp = all_data[all_data['DATE'] < market.current_date.date()]
     for _, ith in sorted_std_diff.iterrows():
-        result = all_data[(all_data['CODE'] == ith['CODE']) & (all_data['DATE'] <= ith['DATE'])].tail(config.pattern_length)
-        if result.shape[0] != 30:
-            print(ith['CODE'],  ith['DATE'])
+        result = tmp[(tmp['CODE'] == ith['CODE']) & (tmp['DATE'] <= ith['DATE'])].tail(config.pattern_length)
         distances.append(weighted_distance(norm(result['CLOSE'], result[config.market_ratio_type]),
                                            norm(pattern['CLOSE'], pattern[config.market_ratio_type]),
                                            config.pattern_length))

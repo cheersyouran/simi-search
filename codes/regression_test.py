@@ -11,7 +11,7 @@ from codes.config import config
 if 'Youran' in config.rootPath:
     config.nb_codes = 3
     config.plot_simi_stock = True
-    config.nb_similar_of_each_stock = 200
+    config.nb_similar_of_each_stock = 100
     config.nb_similar_make_prediction = 5
     config.nb_similar_of_all_similar = 15
     config.cores = 4
@@ -188,6 +188,7 @@ def regression_test(get_daily_action):
     turnover_rate = 0
     last_action = -1
     while config.start_date <= config.regression_end_date:
+        time_start = time.time()
 
         print('\n[Start Date]: ' + str(config.start_date.date()))
         print('[Current Date]: ' + str(market.current_date.date()))
@@ -222,8 +223,11 @@ def regression_test(get_daily_action):
         dates.append(market.current_date.date())
 
         plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, turnover_rate)
+        time_end = time.time()
+        print('Search Time:', time_end - time_start)
 
 if __name__ == '__main__':
+
     time_start = time.time()
 
     print('\n#####################################')
@@ -235,8 +239,8 @@ if __name__ == '__main__':
     print('Speed Meth: ' + str(config.speed_method))
     print('#####################################')
 
-    # regression_test(make_prediction2)
-    regression_test(make_prediction)
+    regression_test(make_prediction2)
+    # regression_test(make_prediction)
 
     time_end = time.time()
     print('Search Time:', time_end - time_start)

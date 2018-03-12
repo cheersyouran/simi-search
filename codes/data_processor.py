@@ -53,8 +53,9 @@ def gen_800_fft_data(path):
 
     for i in range(config.fft_level):
         ind = str(i+1)
-        data['fft'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')
-        data['deg'+ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')
+        data['fft'+ind] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='fft')
+        data['deg'+ind] = data.groupby(['CODE'])['CLOSE'].apply(func=apply, rolling_aply=rolling_aply_fft, freq=i, method='deg')
+        print(ind)
 
     data.to_csv(path, index=False)
 

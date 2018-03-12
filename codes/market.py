@@ -63,7 +63,6 @@ class Market:
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         targets = targets[targets['DATE'] < market.current_date.date()]
-        targets = targets[targets['DATE'] > '2004-12-31']
 
         if start_date == None and end_date != None:
             self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)
