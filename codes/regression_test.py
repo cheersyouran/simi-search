@@ -29,6 +29,32 @@ from codes.market import market
 from codes.base import plot_nav_curve, norm
 from scipy.stats.stats import pearsonr
 
+def make_index_prediction():
+
+    pool = Pool(processes=config.cores)
+    all_stocks_avg_pred_results = pool.map(predict_stock_base_on_similars, market.codes)
+    pool.close()
+
+    pred1, pred5, pred10, pred20 = 0, 0, 0, 0
+    for result in all_stocks_avg_pred_results:
+        pred1 += result[1] / len(all_stocks_avg_pred_results)
+        pred5 += result[2] / len(all_stocks_avg_pred_results)
+        pred10 += result[3] / len(all_stocks_avg_pred_results)
+        pred20 += result[4] / len(all_stocks_avg_pred_results)
+
+    m = market.get_data(start_date=market.current_date)
+    act1 = (m['800_MARKET'].iloc[1] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
+    act5 = (m['800_MARKET'].iloc[5] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
+    act10 = (m['800_MARKET'].iloc[10] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
+    act20 = (m['800_MARKET'].iloc[20] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
+
+    if pred5 > 0:
+        action = 1
+    else:
+        action = -1
+
+    return action, pred5, act5, act5
+
 # 汇总800*20支相似股票
 def make_prediction():
 
@@ -239,8 +265,9 @@ if __name__ == '__main__':
     print('Speed Meth: ' + str(config.speed_method))
     print('#####################################')
 
-    regression_test(make_prediction2)
+    # regression_test(make_prediction2)
     # regression_test(make_prediction)
+    regression_test(make_index_prediction)
 
     time_end = time.time()
     print('Search Time:', time_end - time_start)

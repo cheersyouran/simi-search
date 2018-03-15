@@ -38,7 +38,7 @@ class Config:
 
         self.speed_method = 'fft_euclidean' # 800and300; normalization
         self.speed_method = 'value_ratio_fft_euclidean' # 沪深300指数预测
-        self.speed_method = 'rm_market_fft'
+        # self.speed_method = 'rm_market_fft'
         self.speed_method = 'rm_market_vr_fft' #value_ratio 除去市场
         self.market_index = 800
 
