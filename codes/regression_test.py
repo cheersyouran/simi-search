@@ -39,10 +39,10 @@ def make_index_prediction():
     for result in all_stocks_avg_pred_results:
         if result is None:
             continue
-        pred1 += result[0] / len(all_stocks_avg_pred_results)
-        pred5 += result[1] / len(all_stocks_avg_pred_results)
-        pred10 += result[2] / len(all_stocks_avg_pred_results)
-        pred20 += result[3] / len(all_stocks_avg_pred_results)
+        pred1 += result[1] / len(all_stocks_avg_pred_results)
+        pred5 += result[2] / len(all_stocks_avg_pred_results)
+        pred10 += result[3] / len(all_stocks_avg_pred_results)
+        pred20 += result[4] / len(all_stocks_avg_pred_results)
 
     m = market.get_data(start_date=market.current_date)
     act1 = (m['800_MARKET'].iloc[1] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]

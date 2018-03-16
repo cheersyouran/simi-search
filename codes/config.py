@@ -49,7 +49,7 @@ class Config:
 
         self.pattern_length = 30
         self.regression_days = 3000
-        self.start_date = pd.to_datetime('2010-01-04')
+        self.start_date = pd.to_datetime('2016-01-04')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.fft_level = 5
