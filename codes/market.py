@@ -81,8 +81,10 @@ class Market:
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         targets = targets[targets['DATE'] < market.current_date.date()]
 
-        start = self.trading_days[self.trading_days['DATE'] < end_date].tail(30).head(1).values[0][0]
-        self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date) & (self.all_data['DATE'] >= start)]
+        start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
+        self.pattern = self.all_data[(self.all_data['CODE'] == code) &
+                                     (self.all_data['DATE'] <= end_date) &
+                                     (self.all_data['DATE'] >= start)]
 
         self.targets = targets
         self.targets = self.targets.dropna()

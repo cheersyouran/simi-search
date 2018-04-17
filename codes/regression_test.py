@@ -129,7 +129,8 @@ def make_prediction2():
             pred_ratio10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
             pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
 
-        if pd.to_datetime(config.update_end) < config.start_date:
+        if ~config.is_regression_test:
+        # if pd.to_datetime(config.update_end) < config.start_date:
             print('正在进行实际预测, 无实际值...')
         else:
             act = market.get_data(start_date=market.current_date, code=pattern_code)
@@ -162,12 +163,11 @@ def make_prediction2():
     tops.groupby(['pattern']).apply(func=apply)
     print('[Codes left] ', len(codes))
 
-    if pd.to_datetime(config.update_end) < config.start_date:
+    if ~config.is_regression_test:
         return get_action(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20)
     else:
         return get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
                               act_ratios1, act_ratios5, act_ratios10, act_ratios20)
-
 
 
 def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
@@ -189,14 +189,9 @@ def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, 
         OrderedDict({'CURRENT_DATE': [market.current_date], 'P1': [p1], 'P2': [p2], 'P3': [p3], 'P4': [p4]}))
     pearson.to_csv(config.PEARSON_CORR_RESLUT, mode='a', header=False, index=False)
 
-    if config.weekily_regression:
-        pred_ratio = np.sum(pred_act_result['PRED5']) * (1 / pred_act_result.shape[0])
-        act_ratio = np.sum(pred_act_result['ACT5']) * (1 / pred_act_result.shape[0])
-        market_ratio = market.get_data(start_date=market.current_date)[config.market_ratio_type].iloc[5]
-    else:
-        pred_ratio = np.sum(pred_act_result['PRED1']) * (1 / pred_act_result.shape[0])
-        act_ratio = np.sum(pred_act_result['ACT1']) * (1 / pred_act_result.shape[0])
-        market_ratio = market.get_data(start_date=market.current_date)[config.market_ratio_type].iloc[1]
+    pred_ratio = np.sum(pred_act_result['PRED5']) * (1 / pred_act_result.shape[0])
+    act_ratio = np.sum(pred_act_result['ACT5']) * (1 / pred_act_result.shape[0])
+    market_ratio = market.get_data(start_date=market.current_date)[config.market_ratio_type].iloc[5]
 
     market_ratio /= 100
 

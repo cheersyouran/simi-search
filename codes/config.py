@@ -53,7 +53,7 @@ class Config:
         # 之前的最后一天
         self.update_start = '2017-12-29'
         self.update_end = '2018-03-07'
-        self.start_date = pd.to_datetime('2018-03-08')
+        self.start_date = pd.to_datetime('2018-03-05')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.fft_level = 5
@@ -68,8 +68,8 @@ class Config:
         self.alpha = np.multiply([1, 1, 1, 1, 1], 40)
         self.beata = np.multiply([1, 1, 1, 1, 1], math.pi / 180)
 
-        self.weekily_regression = True
         self.plot_simi_stock = False
+        self.is_regression_test = False
         self.cores = 100
 
         name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + \
