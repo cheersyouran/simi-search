@@ -4,9 +4,9 @@ from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
 
 def find_similar_of_a_stock(code):
-    all_data, pattern, targets = market.get_historical_data(start_date=config.start_date, code=code)
+    all_data, pattern, targets = market.get_historical_data(end_date=config.start_date, code=code)
 
-    if pattern.isnull().any().any():
+    if pattern is None:
         return None
 
     ALPHA = config.alpha

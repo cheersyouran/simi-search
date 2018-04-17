@@ -103,6 +103,7 @@ def make_prediction2():
     tops = pool.map(find_similar_of_a_stock, market.codes)
     pool.close()
 
+    tops = [top for top in tops if top is not None]
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
@@ -128,19 +129,22 @@ def make_prediction2():
             pred_ratio10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
             pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
 
-        act = market.get_data(start_date=market.current_date, code=pattern_code)
-        if config.speed_method in ['rm_market_vr_fft']:
-            act_market_ratios1 = market.get_span_market_ratio(pred, 1)
-            act_market_ratios5 = market.get_span_market_ratio(pred, 5)
-            act_market_ratios10 = market.get_span_market_ratio(pred, 10)
-            act_market_ratios20 = market.get_span_market_ratio(pred, 20)
+        if pd.to_datetime(config.update_end) < config.start_date:
+            print('正在进行实际预测, 无实际值...')
         else:
-            act_market_ratios1, act_market_ratios5, act_market_ratios10, act_market_ratios20 = 0, 0, 0, 0
+            act = market.get_data(start_date=market.current_date, code=pattern_code)
+            if config.speed_method in ['rm_market_vr_fft']:
+                act_market_ratios1 = market.get_span_market_ratio(pred, 1)
+                act_market_ratios5 = market.get_span_market_ratio(pred, 5)
+                act_market_ratios10 = market.get_span_market_ratio(pred, 10)
+                act_market_ratios20 = market.get_span_market_ratio(pred, 20)
+            else:
+                act_market_ratios1, act_market_ratios5, act_market_ratios10, act_market_ratios20 = 0, 0, 0, 0
 
-        act_ratios1.append((act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
-        act_ratios5.append((act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
-        act_ratios10.append((act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
-        act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
+            act_ratios1.append((act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
+            act_ratios5.append((act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
+            act_ratios10.append((act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
+            act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
 
         size = tops.shape[0]
 
@@ -158,11 +162,13 @@ def make_prediction2():
     tops.groupby(['pattern']).apply(func=apply)
     print('[Codes left] ', len(codes))
 
-    action, pred_ratio, act_ratio, market_ratio = \
-    get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
-                              act_ratios1, act_ratios5, act_ratios10,act_ratios20)
+    if pd.to_datetime(config.update_end) < config.start_date:
+        return get_action(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20)
+    else:
+        return get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
+                              act_ratios1, act_ratios5, act_ratios10, act_ratios20)
 
-    return action, pred_ratio, act_ratio, market_ratio
+
 
 def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
                               act_ratios1, act_ratios5, act_ratios10, act_ratios20):
@@ -187,7 +193,6 @@ def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, 
         pred_ratio = np.sum(pred_act_result['PRED5']) * (1 / pred_act_result.shape[0])
         act_ratio = np.sum(pred_act_result['ACT5']) * (1 / pred_act_result.shape[0])
         market_ratio = market.get_data(start_date=market.current_date)[config.market_ratio_type].iloc[5]
-
     else:
         pred_ratio = np.sum(pred_act_result['PRED1']) * (1 / pred_act_result.shape[0])
         act_ratio = np.sum(pred_act_result['ACT1']) * (1 / pred_act_result.shape[0])
@@ -206,6 +211,16 @@ def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, 
     print('[Correlation] ', p4)
 
     return action, pred_ratio, act_ratio, market_ratio
+
+def get_action(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20):
+    pred_act_result = pd.DataFrame(
+        OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date, 'PRED1': pred_ratios1,
+                     'PRED5': pred_ratios5, 'PRED10': pred_ratios10, 'PRED20': pred_ratios20}))
+
+    pred_act_result = pred_act_result.sort_values(ascending=False, by=['PRED5'])
+    pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
+
+    return -1, 0, 0, 0
 
 def regression_test(get_daily_action):
 
@@ -267,9 +282,9 @@ if __name__ == '__main__':
     print('Speed Meth: ' + str(config.speed_method))
     print('#####################################')
 
-    # regression_test(make_prediction2)
+    regression_test(make_prediction2)
     # regression_test(make_prediction)
-    regression_test(make_index_prediction)
+    # regression_test(make_index_prediction)
 
     time_end = time.time()
     print('Search Time:', time_end - time_start)

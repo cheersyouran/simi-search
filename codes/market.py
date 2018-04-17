@@ -2,6 +2,9 @@ from codes.config import config
 import os
 import pandas as pd
 import numpy as np
+import tushare as ts
+from codes.data_generator import update_data
+
 from memory_profiler import profile
 
 class Market:
@@ -24,7 +27,7 @@ class Market:
 
         self.pattern = None
         self.targets = None
-        self.current_date = self.pass_days(config.start_date, config.pattern_length - 1)
+        self.current_date = config.start_date
 
     def _init_all_data(self, speed_method=config.speed_method):
 
@@ -37,7 +40,8 @@ class Market:
 
         if self.all_data is None:
             print('Init All Data! ', os.getpid())
-            self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
+            self.all_data = update_data()
+            # self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
     def _init_codes(self):
         if config.market_index == 300:
@@ -46,10 +50,23 @@ class Market:
             path = config.ZZ800_CODES
         else:
             raise Exception()
-        self.codes = pd.read_csv(path).head(config.nb_codes).values.flatten()
+
+        def apply(x):
+            if int(x[0]) >= 6:
+                return x + '.SH'
+            else:
+                return x + '.SZ'
+
+        codes = pd.read_csv(path, dtype={'CODE': str})
+        codes['CODE'] = codes['CODE'].apply(func=apply)
+        self.codes = codes['CODE'].head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
-        self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
+        trading_day = ts.trade_cal()
+        trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
+        trading_day = trading_day[trading_day['isOpen'] == 1]
+        trading_day.columns = [['DATE', 'OPEN']]
+        self.trading_days = trading_day
 
     def _pass_a_day(self):
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
@@ -59,22 +76,19 @@ class Market:
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(5).tail(1).values[0][0])
         config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(5).tail(1).values[0][0])
 
-    def get_historical_data(self, start_date=None, end_date=None, code=config.code):
+    def get_historical_data(self, end_date=None, code=config.code):
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         targets = targets[targets['DATE'] < market.current_date.date()]
 
-        if start_date == None and end_date != None:
-            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date)].tail(config.pattern_length)
-        elif start_date != None and end_date == None:
-            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] >= start_date)].head(config.pattern_length)
-        elif start_date != None and end_date != None:
-            self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date) & (self.all_data['DATE'] >= start_date)]
+        start = self.trading_days[self.trading_days['DATE'] < end_date].tail(30).head(1).values[0][0]
+        self.pattern = self.all_data[(self.all_data['CODE'] == code) & (self.all_data['DATE'] <= end_date) & (self.all_data['DATE'] >= start)]
 
-        self.pattern = self.pattern.reset_index(drop=True)
         self.targets = targets
         self.targets = self.targets.dropna()
-
+        if self.pattern.shape[0] == 0:
+            return self.all_data, None, self.targets
+        self.pattern = self.pattern.reset_index(drop=True)
         return self.all_data, self.pattern, self.targets
 
     def get_data(self, start_date=None, end_date=None, code=None, pattern_length=config.pattern_length):
