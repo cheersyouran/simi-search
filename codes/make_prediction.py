@@ -1,6 +1,5 @@
 import sys
 import os
-from codes.regression_test import make_prediction2
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -20,6 +19,7 @@ import time
 import matplotlib
 matplotlib.use('Agg')
 from codes.market import market
+from codes.regression_test import make_prediction2
 
 if __name__ == '__main__':
 
