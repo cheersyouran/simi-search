@@ -104,7 +104,10 @@ def make_prediction2():
     tops = pool.map(find_similar_of_a_stock, market.codes)
     pool.close()
 
+    print("tops:", tops.shape[0])
     tops = [top for top in tops if top is not None]
+    print("tops:", tops.shape[0])
+
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
@@ -121,8 +124,8 @@ def make_prediction2():
             if pred.shape[0] != 30:
                 print(pattern_code)
                 print(pred.shape[0])
-                print(pred.iloc[0])
-                print(pred.iloc[-1])
+                # print(pred.iloc[0])
+                # print(pred.iloc[-1])
                 continue
             size += 1
 
