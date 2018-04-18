@@ -114,12 +114,17 @@ def make_prediction2():
         pattern_code = x_['pattern'].values[0]
 
         pred_ratio1, pred_ratio5, pred_ratio10, pred_ratio20 = 0, 0, 0, 0
+        size = 0
         for index, top in x_.iterrows():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
 
-            if pred.shape[0] < 30:
+            if pred.shape[0] != 30:
                 print(pattern_code)
-                print(pred.values)
+                print(pred.shape[0])
+                print(pred.iloc[0])
+                print(pred.iloc[-1])
+                continue
+            size += 1
 
             if config.speed_method in ['rm_market_vr_fft']:
                 pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
@@ -151,8 +156,6 @@ def make_prediction2():
             act_ratios5.append((act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
             act_ratios10.append((act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
             act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
-
-        size = tops.shape[0]
 
         pred_ratios1.append(pred_ratio1 / size)
         pred_ratios5.append(pred_ratio5 / size)
