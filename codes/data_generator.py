@@ -19,6 +19,7 @@ def get_traiding_day(start=None, end=None):
         trading_day = all_trading_day[all_trading_day['calendarDate'] >= start]
     else:
         trading_day = all_trading_day[(all_trading_day['calendarDate'] >= start) & (all_trading_day['calendarDate'] <= end)]
+    all_trading_day.columns = [['DATE', 'OPEN']]
     return trading_day, all_trading_day
 
 def _gen_zz800_stock_list():
@@ -141,7 +142,7 @@ def update_data():
 if __name__ == '__main__':
     sorted_new_zz800_rm_vr_data, sorted_new_zz800_data, all_trading_day = update_data()
 
-    sorted_new_zz800_data.to_csv(config.ZZ800_DATA, index=False)
-    sorted_new_zz800_rm_vr_data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
-    all_trading_day.to_csv(config.TRAINING_DAY, index=False)
+    # sorted_new_zz800_data.to_csv(config.ZZ800_DATA, index=False)
+    # sorted_new_zz800_rm_vr_data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    # all_trading_day.to_csv(config.TRAINING_DAY, index=False)
     print('')

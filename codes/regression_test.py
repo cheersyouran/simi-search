@@ -9,11 +9,11 @@ sys.path.append(rootPath)
 
 from codes.config import config
 if 'Youran' in config.rootPath:
-    # config.nb_codes = 3
+    config.nb_codes = 3
     # config.plot_simi_stock = True
-    # config.nb_similar_of_each_stock = 100
-    # config.nb_similar_make_prediction = 5
-    # config.nb_similar_of_all_similar = 15
+    config.nb_similar_of_each_stock = 100
+    config.nb_similar_make_prediction = 5
+    config.nb_similar_of_all_similar = 15
     config.cores = 4
 
 import time
@@ -99,6 +99,7 @@ def make_prediction():
 
 # 先对每支股票的找200支相似，然后汇总800*200后取前4000
 def make_prediction2():
+
     pool = Pool(processes=config.cores)
     tops = pool.map(find_similar_of_a_stock, market.codes)
     pool.close()
@@ -115,6 +116,10 @@ def make_prediction2():
         pred_ratio1, pred_ratio5, pred_ratio10, pred_ratio20 = 0, 0, 0, 0
         for index, top in x_.iterrows():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
+
+            if pred.shape[0] < 30:
+                print(pattern_code)
+                print(pred.values)
 
             if config.speed_method in ['rm_market_vr_fft']:
                 pred_market_ratios1 = market.get_span_market_ratio(pred, 1)

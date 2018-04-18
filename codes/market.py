@@ -85,9 +85,10 @@ class Market:
     def get_historical_data(self, end_date=None, code=config.code):
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
-        targets = targets[targets['DATE'] < market.current_date.date()]
-
         start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
+
+        targets = targets[targets['DATE'] < start]
+
         self.pattern = self.all_data[(self.all_data['CODE'] == code) &
                                      (self.all_data['DATE'] <= end_date) &
                                      (self.all_data['DATE'] >= start)]
