@@ -9,17 +9,17 @@ def get_today_all():
     return data
 
 def get_traiding_day(start=None, end=None):
-    trading_day = ts.trade_cal()
+    all_trading_day = ts.trade_cal()
 
-    trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
-    trading_day = trading_day[trading_day['isOpen'] == 1]
+    all_trading_day['calendarDate'] = all_trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
+    all_trading_day = all_trading_day[all_trading_day['isOpen'] == 1]
     if start is None:
-        trading_day = trading_day[trading_day['calendarDate'] <= end]
+        trading_day = all_trading_day[all_trading_day['calendarDate'] <= end]
     elif end is None:
-        trading_day = trading_day[trading_day['calendarDate'] >= start]
+        trading_day = all_trading_day[all_trading_day['calendarDate'] >= start]
     else:
-        trading_day = trading_day[(trading_day['calendarDate'] >= start) & (trading_day['calendarDate'] <= end)]
-    return trading_day
+        trading_day = all_trading_day[(all_trading_day['calendarDate'] >= start) & (all_trading_day['calendarDate'] <= end)]
+    return trading_day, all_trading_day
 
 def _gen_zz800_stock_list():
     '''
@@ -118,13 +118,14 @@ def update_data():
     end = config.update_end
 
     zz800_data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
-    trading_day = get_traiding_day(start, end)
+    trading_day, all_trading_day = get_traiding_day(start, end)
     recently_zz800_data = get_zz800_hist_data(trading_day)
     new_zz800_data = zz800_data.append(recently_zz800_data)
     sorted_new_zz800_data = new_zz800_data.sort_values(ascending=True, by=['CODE', 'DATE'])
 
     zz800_fft_data = pd.read_csv(config.ZZ800_RM_VR_FFT, parse_dates=['DATE'], low_memory=False)
-    date = get_traiding_day(start=None, end=start).tail(30).head(1).values[0][0]
+    date, _ = get_traiding_day(start=None, end=start)
+    date = date.tail(30).head(1).values[0][0]
     new_fft_zz800 = zz800_fft_data[zz800_fft_data['DATE'] >= date]
     new_fft_zz800 = new_fft_zz800.append(recently_zz800_data)
     new_fft_zz800 = new_fft_zz800.sort_values(ascending=True, by=['CODE', 'DATE'])
@@ -132,11 +133,15 @@ def update_data():
     new_zz800_rm_vr_data = zz800_fft_data.append(rm_vr_data)
     sorted_new_zz800_rm_vr_data = new_zz800_rm_vr_data.sort_values(ascending=True, by=['CODE', 'DATE'])
 
-    return sorted_new_zz800_rm_vr_data
+    sorted_new_zz800_data.drop_duplicates(subset=['CODE', 'DATE'], inplace=True)
+    sorted_new_zz800_rm_vr_data.drop_duplicates(subset=['CODE', 'DATE'], inplace=True)
+
+    return sorted_new_zz800_rm_vr_data, sorted_new_zz800_data, all_trading_day
 
 if __name__ == '__main__':
+    sorted_new_zz800_rm_vr_data, sorted_new_zz800_data, all_trading_day = update_data()
 
-    update_data()
-
-    # sorted_new_zz800.to_csv(path, index=False)
+    sorted_new_zz800_data.to_csv(config.ZZ800_DATA, index=False)
+    sorted_new_zz800_rm_vr_data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    all_trading_day.to_csv(config.TRAINING_DAY, index=False)
     print('')

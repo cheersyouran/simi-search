@@ -7,14 +7,6 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'Youran' in config.rootPath:
-    config.nb_codes = 3
-    config.plot_simi_stock = False
-    config.nb_similar_of_each_stock = 100
-    config.nb_similar_make_prediction = 5
-    config.nb_similar_of_all_similar = 15
-    config.cores = 4
-
 import time
 import matplotlib
 matplotlib.use('Agg')

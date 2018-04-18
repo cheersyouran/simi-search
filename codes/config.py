@@ -62,14 +62,14 @@ class Config:
         self.market_ratio_type = '300_RATIO' if self.market_index == 300 else '800_RATIO'
         self.nb_codes = 300 if self.market_index == 300 else 800
 
+        self.auto_update = False
+        self.plot_simi_stock = False
+        self.is_regression_test = False
         self.weighted_dist = True
         self.weight_a = 1
         self.weight_b = 2
         self.alpha = np.multiply([1, 1, 1, 1, 1], 40)
         self.beata = np.multiply([1, 1, 1, 1, 1], math.pi / 180)
-
-        self.plot_simi_stock = False
-        self.is_regression_test = False
         self.cores = 100
 
         name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + \

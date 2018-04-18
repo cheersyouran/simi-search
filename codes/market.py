@@ -40,8 +40,11 @@ class Market:
 
         if self.all_data is None:
             print('Init All Data! ', os.getpid())
-            self.all_data = update_data()
-            # self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
+            if config.auto_update:
+                rm_vr_data, _, __ = update_data()
+                self.all_data = rm_vr_data
+            else:
+                self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
     def _init_codes(self):
         if config.market_index == 300:
@@ -62,11 +65,14 @@ class Market:
         self.codes = codes['CODE'].head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
-        trading_day = ts.trade_cal()
-        trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
-        trading_day = trading_day[trading_day['isOpen'] == 1]
-        trading_day.columns = [['DATE', 'OPEN']]
-        self.trading_days = trading_day
+        if config.auto_update:
+            trading_day = ts.trade_cal()
+            trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
+            trading_day = trading_day[trading_day['isOpen'] == 1]
+            trading_day.columns = [['DATE', 'OPEN']]
+            self.trading_days = trading_day
+        else:
+            self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
 
     def _pass_a_day(self):
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
