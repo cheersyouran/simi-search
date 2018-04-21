@@ -104,9 +104,9 @@ def make_prediction2():
     tops = pool.map(find_similar_of_a_stock, market.codes)
     pool.close()
 
-    print("tops:", tops.shape[0])
+    print("tops:", len(tops))
     tops = [top for top in tops if top is not None]
-    print("tops:", tops.shape[0])
+    print("tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
     tops = tops[tops[config.similarity_method] > 0]

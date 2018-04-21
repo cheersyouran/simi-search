@@ -59,40 +59,6 @@ def gen_800_fft_data(path):
 
     data.to_csv(path, index=False)
 
-def gen_800_RM_VR_fft_data(path):
-    print('gen 800 remove-market-ratio fft data...')
-    print(config.speed_method)
-
-    def apply(data, freq, method):
-        result = data.copy()
-        fft = []
-        for i in range(data.shape[0]):
-            if i < 30:
-                fft.append(None)
-            else:
-                close = data['CLOSE'].iloc[i - 30: i].values
-                market = data['800_RATIO'].iloc[i - 30: i].values
-                x_ = norm(close, market)
-                ffts = np.fft.fft(x_) / len(x_)
-                if method == 'fft':
-                    fft.append(np.abs(ffts[freq]))
-                elif method == 'deg':
-                    fft.append(np.rad2deg(np.angle(ffts[freq])))
-
-        result['CLOSE'] = fft
-        result['800_RATIO'] = data['800_RATIO']
-        return result
-
-    data = pd.read_csv(config.ZZ800_DATA, low_memory=False)
-
-    for i in range(config.fft_level):
-        ind = str(i+1)
-        data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='fft')['CLOSE'].values
-        data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='deg')['CLOSE'].values
-        print(ind)
-
-    data.to_csv(path, index=False)
-
 def gen_new_800_data():
     df1 = pd.read_csv('1.csv')
     df2 = pd.read_csv('2.csv')

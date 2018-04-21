@@ -15,7 +15,6 @@ if 'Youran' in config.rootPath:
     config.nb_similar_of_all_similar = 15
     config.cores = 4
 
-
 import time
 import matplotlib
 matplotlib.use('Agg')

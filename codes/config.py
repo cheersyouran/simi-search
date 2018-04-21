@@ -24,6 +24,7 @@ class Config:
         self.DATA = self.rootPath + '/data/data.csv'
 
         self.ZZ800_DATA = self.rootPath + '/data/800_data.csv'
+        self.ZZ800_RAW_DATA = self.rootPath + '/data/800_raw_data.csv'
         self.ZZ800_FFT_DATA = self.rootPath + '/data/800_fft_data.csv'
         self.ZZ800_VALUE_RATIO_FFT_DATA = self.rootPath + '/data/800_value_ratio_fft_data.csv'
         self.ZZ800_CODES = self.rootPath + '/data/800_codes.csv'
