@@ -12,6 +12,17 @@ sys.path.append(rootPath)
 from codes.base import norm
 from codes.config import config
 
+def _format_code(data):
+    def apply(x):
+        if int(x[0]) >= 6:
+            return x + '.SH'
+        else:
+            return x + '.SZ'
+
+    data['CODE'] = data['CODE'].apply(func=apply)
+    return data
+
+
 def get_traiding_day(start=None, end=None):
     all_trading_day = ts.trade_cal()
 
@@ -73,7 +84,7 @@ def get_zz800_hist_data(trading_day):
     market['800_RATIO'] = market['800_MARKET'].rolling(window=2).apply(func=rolling_aply)
     market = market.dropna()
     hist_data = hist_data.merge(market, on=['DATE'], how='left')
-    hist_data = _format_code_and_date(hist_data)
+    hist_data = _format_code(hist_data)
 
     return hist_data
 
@@ -111,9 +122,13 @@ def update_data():
     end = config.update_end
 
     zz800_data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+
     trading_day, all_trading_day = get_traiding_day(start, end)
+
     recently_zz800_data = get_zz800_hist_data(trading_day)
+
     new_zz800_data = zz800_data.append(recently_zz800_data)
+
     sorted_new_zz800_data = new_zz800_data.sort_values(ascending=True, by=['CODE', 'DATE'])
 
     zz800_fft_data = pd.read_csv(config.ZZ800_RM_VR_FFT, parse_dates=['DATE'], low_memory=False)
@@ -141,17 +156,6 @@ def init_dataset_matrix():
     zz800_raw_data = zz800_raw_data[['SecuCode', 'date', 'ret', 'close']]
     zz800_raw_data.columns = ['CODE', 'DATE', 'RET', 'CLOSE']
 
-    def _format_code(data):
-
-        def apply(x):
-            if int(x[0]) >= 6:
-                return x + '.SH'
-            else:
-                return x + '.SZ'
-
-        data['CODE'] = data['CODE'].apply(func=apply)
-        return data
-
     zz800_raw_data = _format_code(zz800_raw_data)
 
     trading_day = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
@@ -175,8 +179,8 @@ def init_dataset_matrix():
 
     dataset.to_csv(config.ZZ800_DATA, index=False)
 
-def gen_800_RM_VR_fft_data():
-    print('gen 800 remove-market-ratio fft data...')
+def init_800_RM_VR_fft_data():
+    print('init 800 remove-market-ratio fft data...')
     print(config.speed_method)
 
     def apply(data, freq, method):
@@ -187,7 +191,7 @@ def gen_800_RM_VR_fft_data():
                 fft.append(None)
             else:
                 ret = data['RET'].iloc[i - 30: i].values
-                market = data['800_RATIO'].iloc[i - 30: i].values
+                market = data['300_RATIO'].iloc[i - 30: i].values
                 x_ = norm(ret, market)
                 ffts = np.fft.fft(x_) / len(x_)
                 if method == 'fft':
@@ -202,15 +206,17 @@ def gen_800_RM_VR_fft_data():
 
     for i in range(config.fft_level):
         ind = str(i+1)
-        data['fft' + ind] = data.groupby(['CODE'])[['CODE', '800_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
-        data['deg' + ind] = data.groupby(['CODE'])[['CODE', '800_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
+        data['fft' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
+        data['deg' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
         print(ind)
 
     data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
 
 if __name__ == '__main__':
 
-    # init_dataset_matrix()
-    gen_800_RM_VR_fft_data()
+    init_dataset_matrix()
+    init_800_RM_VR_fft_data()
+
+    # data = ts.get_hist_data('hs800', start='2017-01-03', end='2017-02-05')
 
     print('')
