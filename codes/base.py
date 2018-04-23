@@ -15,19 +15,12 @@ def weighted_distance(x, y, length=config.pattern_length):
         return euclidean(x, y)
 
 def norm(X, ratio=None):
-    if config.speed_method in ['value_ratio_fft_euclidean']:
-        result = X / pd.DataFrame(X).iloc[0][0]
-    elif config.speed_method == 'rm_market_vr_fft':
-        if ratio is None:
-            raise Exception('No Ratios!')
-        result_ = X / pd.DataFrame(X).iloc[0][0]
-        ratio_ = (ratio / 100) + 1
-        r = ratio_ / pd.DataFrame(ratio_).iloc[0][0]
-        result = np.divide(result_, r)
-
-    elif config.speed_method in ['fft_euclidean']:
-        result = preprocessing.scale(X)
-
+    if ratio is None:
+        raise Exception('No Ratios!')
+    ret_ = X + 1
+    ratio_ = (ratio / 100) + 1
+    r = ratio_ / pd.DataFrame(ratio_).iloc[0][0]
+    result = np.divide(ret_, r)
     return result
 
 def plot_simi_stock(top, data, pattern, filename, codes):
