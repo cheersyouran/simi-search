@@ -24,17 +24,16 @@ def _format_code(data):
 
 
 def get_traiding_day(start=None, end=None):
-    all_trading_day = ts.trade_cal()
-
-    all_trading_day['calendarDate'] = all_trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
-    all_trading_day = all_trading_day[all_trading_day['isOpen'] == 1]
-    if start is None:
-        trading_day = all_trading_day[all_trading_day['calendarDate'] <= end]
-    elif end is None:
-        trading_day = all_trading_day[all_trading_day['calendarDate'] >= start]
-    else:
-        trading_day = all_trading_day[(all_trading_day['calendarDate'] >= start) & (all_trading_day['calendarDate'] <= end)]
+    all_trading_day = pd.read_csv(config.TRAINING_DAY)
     all_trading_day.columns = [['DATE', 'OPEN']]
+    all_trading_day = all_trading_day[all_trading_day['OPEN'] == 1]
+
+    if start is None:
+        trading_day = all_trading_day[all_trading_day['DATE'] <= end]
+    elif end is None:
+        trading_day = all_trading_day[all_trading_day['DATE'] >= start]
+    else:
+        trading_day = all_trading_day[(all_trading_day['DATE'] >= start) & (all_trading_day['DATE'] <= end)]
     return trading_day, all_trading_day
 
 def _gen_zz800_stock_list():
@@ -50,101 +49,80 @@ def _gen_zz800_stock_list():
     zz800.to_csv(config.ZZ800_CODES, index=False)
     return zz800
 
-def get_zz800_hist_data(trading_day):
+def get_new_zz800_data(trading_day):
 
-    market_start_date = str(trading_day.iloc[0]['calendarDate'].date())
-    start_date = str(trading_day.iloc[1]['calendarDate'].date())
-    end_date = str(trading_day.iloc[-1]['calendarDate'].date())
+    start_date = trading_day.iloc[0]['DATE']
+    end_date = trading_day.iloc[-1]['DATE']
 
     codes = _gen_zz800_stock_list()['CODE'].head(10)
     if codes.empty:
         raise Exception('No codes file found!')
 
+    market_ratio = ts.get_hist_data('hs300', start=start_date, end=end_date).reset_index()
     datas = []
     for code in codes:
-        data = ts.get_k_data(code, start=start_date, end=end_date)
-        if data.size == 0:
+        data = ts.get_hist_data(code, start=start_date, end=end_date)
+        if data is None or data.size == 0:
             print(code)
             continue
         else:
-            data['300_market'] = 0
-            data['300_ratio'] = 0
+            data['800_ratio'] = 0
+            data['code'] = code
             data = data.reset_index()
-            datas.append(data[['close', 'code', 'date', '300_market', '300_ratio']])
+            datas.append(data[['close', 'code', 'date', 'p_change', '800_ratio']])
 
     hist_data = pd.concat(datas)
+    hist_data.columns = ['close', 'code', 'date', 'ret', '800_ratio']
+    hist_data = hist_data.merge(market_ratio[['date', 'p_change']], on=['date'], how='left')
+    hist_data.columns = ['close', 'code', 'date', 'ret', '800_ratio', '300_ratio']
     hist_data.columns = hist_data.columns.str.upper()
 
-    market = ts.get_k_data('000906', start=market_start_date, end=end_date, index=True)[['date', 'close']]
-    market.columns = ['DATE', '800_MARKET']
-
-    def rolling_aply(input):
-        return (input[1] - input[0]) / input[0]
-
-    market['800_RATIO'] = market['800_MARKET'].rolling(window=2).apply(func=rolling_aply)
-    market = market.dropna()
-    hist_data = hist_data.merge(market, on=['DATE'], how='left')
     hist_data = _format_code(hist_data)
-
     return hist_data
 
-def _update_800_RM_VR_fft_data(data):
-    def apply(data, freq, method):
-        result = data.copy()
-        fft = []
-        for i in range(data.shape[0]):
-            if i < 30:
-                fft.append(None)
-            else:
-                close = data['CLOSE'].iloc[i - 30: i].values
-                market = data['800_RATIO'].iloc[i - 30: i].values
-                x_ = norm(close, market)
-                ffts = np.fft.fft(x_) / len(x_)
-                if method == 'fft':
-                    fft.append(np.abs(ffts[freq]))
-                elif method == 'deg':
-                    fft.append(np.rad2deg(np.angle(ffts[freq])))
-
-        result['CLOSE'] = fft
-        result['800_RATIO'] = data['800_RATIO']
-        return result
-
-    for i in range(config.fft_level):
-        ind = str(i+1)
-        data['fft' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='fft')['CLOSE'].values
-        data['deg' + ind] = data.groupby(['CODE'])['CLOSE', '800_RATIO'].apply(func=apply, freq=i, method='deg')['CLOSE'].values
-        print(ind)
-
-    return data
-
 def update_data():
-    start = config.update_start
-    end = config.update_end
 
-    zz800_data = pd.read_csv(config.ZZ800_DATA, parse_dates=['DATE'], low_memory=False)
+    def _update_quotation_data():
+
+        zz800_dataset = pd.read_csv(config.ZZ800_DATA, low_memory=False)
+        new_zz800_data = get_new_zz800_data(trading_day)
+
+        codes = np.unique(np.hstack((new_zz800_data['CODE'].unique(), zz800_dataset['CODE'].unique())))
+        dates = trading_day['DATE'].values
+
+        item = []
+        for code in codes:
+            for date in dates:
+                item.append([code, date])
+        dataset = pd.DataFrame(item, columns=['CODE', 'DATE'])
+
+        update_dataset = dataset.merge(new_zz800_data, how='left', on=['CODE', 'DATE'])
+        new_dataset = zz800_dataset.append(update_dataset)
+
+        new_dataset = new_dataset.sort_values(ascending=True, by=['CODE', 'DATE'])
+        return new_dataset
+
+    def _update_RMVR_fft_data(new_dataset):
+        date, _ = get_traiding_day(start=None, end=start)
+        date = date.tail(30).head(1).values[0][0]
+
+        df = new_dataset[new_dataset['DATE'] >= date]
+        new_fft_dataset = init_800_RMVR_fft_data(df)
+
+        new_fft_dataset = new_fft_dataset[new_fft_dataset['DATE'] >= start]
+
+        fft_dataset = pd.read_csv(config.ZZ800_RM_VR_FFT, low_memory=False)
+        new_fft_dataset = fft_dataset.append(new_fft_dataset)
+
+        new_fft_dataset = new_fft_dataset.sort_values(ascending=True, by=['CODE', 'DATE'])
+        return new_fft_dataset
 
     trading_day, all_trading_day = get_traiding_day(start, end)
 
-    recently_zz800_data = get_zz800_hist_data(trading_day)
+    new_dataset = _update_quotation_data()
+    zz800_fft_dataset = _update_RMVR_fft_data(new_dataset)
 
-    new_zz800_data = zz800_data.append(recently_zz800_data)
-
-    sorted_new_zz800_data = new_zz800_data.sort_values(ascending=True, by=['CODE', 'DATE'])
-
-    zz800_fft_data = pd.read_csv(config.ZZ800_RM_VR_FFT, parse_dates=['DATE'], low_memory=False)
-    date, _ = get_traiding_day(start=None, end=start)
-    date = date.tail(30).head(1).values[0][0]
-    new_fft_zz800 = zz800_fft_data[zz800_fft_data['DATE'] >= date]
-    new_fft_zz800 = new_fft_zz800.append(recently_zz800_data)
-    new_fft_zz800 = new_fft_zz800.sort_values(ascending=True, by=['CODE', 'DATE'])
-    rm_vr_data = _gen_800_RM_VR_fft_data(new_fft_zz800)
-    new_zz800_rm_vr_data = zz800_fft_data.append(rm_vr_data)
-    sorted_new_zz800_rm_vr_data = new_zz800_rm_vr_data.sort_values(ascending=True, by=['CODE', 'DATE'])
-
-    sorted_new_zz800_data.drop_duplicates(subset=['CODE', 'DATE'], inplace=True)
-    sorted_new_zz800_rm_vr_data.drop_duplicates(subset=['CODE', 'DATE'], inplace=True)
-
-    return sorted_new_zz800_rm_vr_data, sorted_new_zz800_data, all_trading_day
+    return new_dataset, zz800_fft_dataset
 
 def init_dataset_matrix():
     '''
@@ -152,26 +130,26 @@ def init_dataset_matrix():
     后者是一个按calendar day排列的字典，空值补Nan
     '''
 
-    zz800_raw_data = pd.read_csv(config.ZZ800_RAW_DATA, dtype={'SecuCode': str}, parse_dates=['date'])
+    zz800_raw_data = pd.read_csv(config.ZZ800_RAW_DATA, dtype={'SecuCode': str})
     zz800_raw_data = zz800_raw_data[['SecuCode', 'date', 'ret', 'close']]
     zz800_raw_data.columns = ['CODE', 'DATE', 'RET', 'CLOSE']
 
     zz800_raw_data = _format_code(zz800_raw_data)
 
-    trading_day = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
+    trading_day = pd.read_csv(config.TRAINING_DAY)
     trading_day = trading_day[(trading_day['DATE'] > '2007-01-01') & (trading_day['DATE'] < '2018-01-01')]
 
     def _mapping_to_dataset():
         data = []
         def apply(x):
             ret = trading_day.merge(x, on=['DATE'], how='left')
-            ret['CODE'] = ret['CODE'].fillna('placeholder')
+            ret['CODE'] = x['CODE'].values[0][0]
             data.append(ret)
 
         zz800_raw_data.groupby(['CODE']).apply(func=apply)
         dataset = pd.concat(data)
 
-        index_ratio = pd.read_csv(config.MARKET_RATIO, parse_dates=['DATE'])
+        index_ratio = pd.read_csv(config.MARKET_RATIO)
         dataset = dataset.merge(index_ratio, on=['DATE'], how='left')
         return dataset
 
@@ -179,9 +157,8 @@ def init_dataset_matrix():
 
     dataset.to_csv(config.ZZ800_DATA, index=False)
 
-def init_800_RM_VR_fft_data():
+def init_800_RMVR_fft_data(data=None):
     print('init 800 remove-market-ratio fft data...')
-    print(config.speed_method)
 
     def apply(data, freq, method):
         result = data.copy()
@@ -202,20 +179,28 @@ def init_800_RM_VR_fft_data():
         result['RET'] = fft
         return result
 
-    data = pd.read_csv(config.ZZ800_DATA, low_memory=False)
+    if data is None:
+        data = pd.read_csv(config.ZZ800_DATA, low_memory=False)
 
     for i in range(config.fft_level):
         ind = str(i+1)
         data['fft' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
         data['deg' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
         print(ind)
-
-    data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    if data is None:
+        data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    else:
+        return data
 
 if __name__ == '__main__':
 
     init_dataset_matrix()
-    init_800_RM_VR_fft_data()
+    init_800_RMVR_fft_data()
+
+    start = config.update_start
+    end = config.update_end
+
+    # zz800_dataset, zz800_fft_dataset = update_data()
 
     # data = ts.get_hist_data('hs800', start='2017-01-03', end='2017-02-05')
 
