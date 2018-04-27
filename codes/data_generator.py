@@ -143,7 +143,7 @@ def init_dataset_matrix():
         data = []
         def apply(x):
             ret = trading_day.merge(x, on=['DATE'], how='left')
-            ret['CODE'] = x['CODE'].values[0][0]
+            ret['CODE'] = x['CODE'].values[0]
             data.append(ret)
 
         zz800_raw_data.groupby(['CODE']).apply(func=apply)
@@ -195,12 +195,12 @@ def init_800_RMVR_fft_data(data=None):
 if __name__ == '__main__':
 
     init_dataset_matrix()
-    init_800_RMVR_fft_data()
+    # init_800_RMVR_fft_data()
 
     start = config.update_start
     end = config.update_end
 
-    # zz800_dataset, zz800_fft_dataset = update_data()
+    zz800_dataset, zz800_fft_dataset = update_data()
 
     # data = ts.get_hist_data('hs800', start='2017-01-03', end='2017-02-05')
 
