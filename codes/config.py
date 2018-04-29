@@ -54,7 +54,7 @@ class Config:
         # 之前的最后一天
         self.update_start = '2018-01-01'
         self.update_end = '2018-01-05'
-        self.start_date = pd.to_datetime('2018-03-05')
+        self.start_date = pd.to_datetime('2017-01-03')
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days)
 
         self.fft_level = 5

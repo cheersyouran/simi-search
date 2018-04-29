@@ -22,7 +22,6 @@ def _format_code(data):
     data['CODE'] = data['CODE'].apply(func=apply)
     return data
 
-
 def get_traiding_day(start=None, end=None):
     all_trading_day = pd.read_csv(config.TRAINING_DAY)
     all_trading_day.columns = [['DATE', 'OPEN']]
@@ -49,7 +48,7 @@ def _gen_zz800_stock_list():
     zz800.to_csv(config.ZZ800_CODES, index=False)
     return zz800
 
-def get_new_zz800_data(trading_day):
+def _get_new_zz800_data(trading_day):
 
     start_date = trading_day.iloc[0]['DATE']
     end_date = trading_day.iloc[-1]['DATE']
@@ -85,7 +84,7 @@ def update_data():
     def _update_quotation_data():
 
         zz800_dataset = pd.read_csv(config.ZZ800_DATA, low_memory=False)
-        new_zz800_data = get_new_zz800_data(trading_day)
+        new_zz800_data = _get_new_zz800_data(trading_day)
 
         codes = np.unique(np.hstack((new_zz800_data['CODE'].unique(), zz800_dataset['CODE'].unique())))
         dates = trading_day['DATE'].values
@@ -150,6 +149,7 @@ def init_dataset_matrix():
         dataset = pd.concat(data)
 
         index_ratio = pd.read_csv(config.MARKET_RATIO)
+        dataset = dataset.drop_duplicates()
         dataset = dataset.merge(index_ratio, on=['DATE'], how='left')
         return dataset
 

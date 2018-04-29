@@ -39,14 +39,14 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     for i in range(config.nb_similar_make_prediction):
         plot_quote = data[data['CODE'] == plot_codes[i]]
         plot_quote = plot_quote[plot_quote['DATE'] <= pd.to_datetime(plot_dates[i])].tail(config.pattern_length)
-        plot_prices[i] = plot_quote['CLOSE'].values
+        plot_prices[i] = plot_quote['RET'].values
         plot_legend.append(
             str(plot_codes[i]) + "," +
             str(config.similarity_method) + ":" +
             str(top.iloc[i][config.similarity_method]))
         plot_market_ratio[i] = plot_quote[config.market_ratio_type].values
 
-    plot_prices[-1] = pattern['CLOSE'].values
+    plot_prices[-1] = pattern['RET'].values
     plot_market_ratio[-1] = pattern[config.market_ratio_type].values
 
     plot_dates[-1] = pattern['DATE'].iloc[-1]

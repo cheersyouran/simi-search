@@ -9,7 +9,7 @@ sys.path.append(rootPath)
 
 from codes.config import config
 if 'Youran' in config.rootPath:
-    config.nb_codes = 3
+    config.nb_codes = 2
     # config.plot_simi_stock = True
     config.nb_similar_of_each_stock = 100
     config.nb_similar_make_prediction = 5
