@@ -157,7 +157,7 @@ def init_dataset_matrix():
 
     dataset.to_csv(config.ZZ800_DATA, index=False)
 
-def init_800_RMVR_fft_data(data=None):
+def init_800_RMVR_fft_data(input_data=None):
     print('init 800 remove-market-ratio fft data...')
 
     def apply(data, freq, method):
@@ -179,15 +179,17 @@ def init_800_RMVR_fft_data(data=None):
         result['RET'] = fft
         return result
 
-    if data is None:
+    if input_data is None:
         data = pd.read_csv(config.ZZ800_DATA, low_memory=False)
+    else:
+        data = input_data
 
     for i in range(config.fft_level):
         ind = str(i+1)
         data['fft' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
         data['deg' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
         print(ind)
-    if data is None:
+    if input_data is None:
         data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
     else:
         return data
@@ -195,12 +197,12 @@ def init_800_RMVR_fft_data(data=None):
 if __name__ == '__main__':
 
     init_dataset_matrix()
-    # init_800_RMVR_fft_data()
+    init_800_RMVR_fft_data()
 
     start = config.update_start
     end = config.update_end
 
-    zz800_dataset, zz800_fft_dataset = update_data()
+    # zz800_dataset, zz800_fft_dataset = update_data()
 
     # data = ts.get_hist_data('hs800', start='2017-01-03', end='2017-02-05')
 
