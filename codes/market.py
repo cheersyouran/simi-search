@@ -96,6 +96,7 @@ class Market:
 
         self.targets = targets
         self.targets = self.targets.dropna()
+
         if self.pattern.shape[0] == 0:
             return self.all_data, None, self.targets
         self.pattern = self.pattern.reset_index(drop=True)

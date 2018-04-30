@@ -142,10 +142,7 @@ def make_prediction2():
             pred_ratio10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
             pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
 
-        if ~config.is_regression_test:
-        # if pd.to_datetime(config.update_end) < config.start_date:
-            print('正在进行实际预测, 无实际值...')
-        else:
+        if config.is_regression_test:
             act = market.get_data(start_date=market.current_date, code=pattern_code)
             if config.speed_method in ['rm_market_vr_fft']:
                 act_market_ratios1 = market.get_span_market_ratio(pred, 1)
@@ -155,10 +152,16 @@ def make_prediction2():
             else:
                 act_market_ratios1, act_market_ratios5, act_market_ratios10, act_market_ratios20 = 0, 0, 0, 0
 
-            act_ratios1.append((act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
-            act_ratios5.append((act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
-            act_ratios10.append((act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
-            act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
+            act_ratios1.append(
+                (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
+            act_ratios5.append(
+                (act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
+            act_ratios10.append(
+                (act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
+            act_ratios20.append(
+                (act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
+        else:
+            print('正在进行实际预测, 无实际值...')
 
         pred_ratios1.append(pred_ratio1 / size)
         pred_ratios5.append(pred_ratio5 / size)
@@ -174,11 +177,11 @@ def make_prediction2():
     tops.groupby(['pattern']).apply(func=apply)
     print('[Codes left] ', len(codes))
 
-    if ~config.is_regression_test:
-        return get_action(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20)
+    if config.is_regression_test:
+        return get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
+                                         act_ratios1, act_ratios5, act_ratios10, act_ratios20)
     else:
-        return get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
-                              act_ratios1, act_ratios5, act_ratios10, act_ratios20)
+        return get_action(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20)
 
 
 def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,

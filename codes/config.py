@@ -65,7 +65,7 @@ class Config:
 
         self.auto_update = False
         self.plot_simi_stock = False
-        self.is_regression_test = False
+        self.is_regression_test = True
         self.weighted_dist = True
         self.weight_a = 1
         self.weight_b = 2
