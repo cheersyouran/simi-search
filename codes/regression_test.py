@@ -264,10 +264,7 @@ def regression_test(get_daily_action):
         act_net_values.append(act_net_values[-1] * (1 + act_ratio))
         market_net_values.append(market_net_values[-1] * (1 + market_ratio))
 
-        if config.weekily_regression == False:
-            market._pass_a_day()
-        else:
-            market._pass_a_week()
+        market._pass_a_week()
 
         dates.append(market.current_date.date())
 

@@ -45,6 +45,7 @@ class Market:
                 self.all_data = rm_vr_data
             else:
                 self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
+                # self.all_data = self.all_data.drop_duplicates()
 
     def _init_codes(self):
         if config.market_index == 300:
@@ -87,7 +88,7 @@ class Market:
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
 
-        targets = targets[targets['DATE'] < start]
+        targets = targets[targets['DATE'] < start].tail(1500)
 
         self.pattern = self.all_data[(self.all_data['CODE'] == code) &
                                      (self.all_data['DATE'] <= end_date) &
