@@ -48,12 +48,7 @@ class Market:
                 # self.all_data = self.all_data.drop_duplicates()
 
     def _init_codes(self):
-        if config.market_index == 300:
-            path = config.HS300_CODES
-        elif config.market_index == 800:
-            path = config.ZZ800_CODES
-        else:
-            raise Exception()
+        path = config.ZZ800_CODES
 
         def apply(x):
             if int(x[0]) >= 6:
@@ -83,7 +78,7 @@ class Market:
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(5).tail(1).values[0][0])
         config.start_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > config.start_date].head(5).tail(1).values[0][0])
 
-    def get_historical_data(self, end_date=None, code=config.code):
+    def get_historical_data(self, end_date=None, code=None):
 
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
@@ -128,7 +123,7 @@ class Market:
         return date_
 
     def get_span_market_ratio(self, df, n):
-        array = np.cumprod(df[config.market_ratio_type] / 100 + 1).values - 1
+        array = np.cumprod(df['300_RATIO'] / 100 + 1).values - 1
         return array[n]
 
 

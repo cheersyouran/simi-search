@@ -30,8 +30,8 @@ def find_similar_of_a_stock(code):
     tmp = all_data[all_data['DATE'] < market.current_date.date()]
     for _, ith in sorted_std_diff.iterrows():
         result = tmp[(tmp['CODE'] == ith['CODE']) & (tmp['DATE'] <= ith['DATE'])].tail(config.pattern_length)
-        distances.append(weighted_distance(norm(result['RET'], result[config.market_ratio_type]),
-                                           norm(pattern['RET'], pattern[config.market_ratio_type]),
+        distances.append(weighted_distance(norm(result['RET'], result['300_RATIO']),
+                                           norm(pattern['RET'], pattern['300_RATIO']),
                                            config.pattern_length))
 
     sorted_std_diff[config.similarity_method] = distances

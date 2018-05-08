@@ -1,3 +1,7 @@
+'''
+工具类，用于生成新的fft数据
+'''
+
 import tushare as ts
 import pandas as pd
 import numpy as np
@@ -203,7 +207,6 @@ if __name__ == '__main__':
     end = config.update_end
 
     # zz800_dataset, zz800_fft_dataset = update_data()
-
-    # data = ts.get_hist_data('hs800', start='2017-01-03', end='2017-02-05')
-
+    # zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    # zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
     print('')

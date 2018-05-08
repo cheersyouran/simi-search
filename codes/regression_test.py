@@ -9,8 +9,8 @@ sys.path.append(rootPath)
 
 from codes.config import config
 if 'Youran' in config.rootPath:
-    config.nb_codes = 2
-    # config.plot_simi_stock = True
+    config.nb_codes = 4
+    config.plot_simi_stock = False
     config.nb_similar_of_each_stock = 100
     config.nb_similar_make_prediction = 5
     config.nb_similar_of_all_similar = 15
@@ -24,9 +24,8 @@ matplotlib.use('Agg')
 
 from multiprocessing import Pool
 from collections import OrderedDict
-from codes.speed_search import predict_stock_base_on_similars, find_similar_of_a_stock
+from codes.search import predict_stock_base_on_similars, find_similar_of_a_stock
 from codes.market import market
-from codes.base import plot_nav_curve, norm
 from scipy.stats.stats import pearsonr
 
 def make_index_prediction():
@@ -105,7 +104,7 @@ def make_prediction2():
     pool.close()
 
     print("tops:", len(tops))
-    tops = [top for top in tops if top is not None]
+    tops = [top for top in tops if top is not None and top.shape[0] != 0]
     print("tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
@@ -178,13 +177,13 @@ def make_prediction2():
     print('[Codes left] ', len(codes))
 
     if config.is_regression_test:
-        return get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
+        return get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
                                          act_ratios1, act_ratios5, act_ratios10, act_ratios20)
     else:
-        return get_action(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20)
+        return get_prediction(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20)
 
 
-def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
+def get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
                               act_ratios1, act_ratios5, act_ratios10, act_ratios20):
 
     pred_act_result = pd.DataFrame(
@@ -203,77 +202,18 @@ def get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, 
         OrderedDict({'CURRENT_DATE': [market.current_date], 'P1': [p1], 'P2': [p2], 'P3': [p3], 'P4': [p4]}))
     pearson.to_csv(config.PEARSON_CORR_RESLUT, mode='a', header=False, index=False)
 
-    pred_ratio = np.sum(pred_act_result['PRED5']) * (1 / pred_act_result.shape[0])
-    act_ratio = np.sum(pred_act_result['ACT5']) * (1 / pred_act_result.shape[0])
-    market_ratio = market.get_data(start_date=market.current_date)[config.market_ratio_type].iloc[5]
-
-    market_ratio /= 100
-
-    if pred_ratio > 0:
-        action = 1
-    else:
-        action = -1
-
     print('[Correlation] ', p1)
     print('[Correlation] ', p2)
     print('[Correlation] ', p3)
     print('[Correlation] ', p4)
 
-    return action, pred_ratio, act_ratio, market_ratio
-
-def get_action(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20):
+def get_prediction(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20):
     pred_act_result = pd.DataFrame(
         OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date, 'PRED1': pred_ratios1,
                      'PRED5': pred_ratios5, 'PRED10': pred_ratios10, 'PRED20': pred_ratios20}))
 
     pred_act_result = pred_act_result.sort_values(ascending=False, by=['PRED5'])
     pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
-
-    return -1, 0, 0, 0
-
-def regression_test(get_daily_action):
-
-    strategy_net_values = [1.0]
-    act_net_values = [1.0]
-    market_net_values = [1.0]
-    dates = [market.current_date.date()]
-    turnover_rate = 0
-    last_action = -1
-    while config.start_date <= config.regression_end_date:
-        time_start = time.time()
-
-        print('\n[Start Date]: ' + str(config.start_date.date()))
-        print('[Current Date]: ' + str(market.current_date.date()))
-
-        action, pred_ratio, act_ratio, market_ratio = get_daily_action()
-
-        print('[Predict]:', pred_ratio)
-        print('[Actual ]:', act_ratio)
-        print('[Market ]:', market_ratio)
-
-        if action == 1:
-            print('[Action]: Buy in!')
-            strategy_net_values.append(strategy_net_values[-1] * (1 + market_ratio))
-        elif action == -1:
-            print('[Action]: Keep Empty!')
-            strategy_net_values.append(strategy_net_values[-1])
-        else:
-            raise Exception()
-
-        if last_action != action:
-            turnover_rate += 1
-        last_action = action
-
-        act_net_values.append(act_net_values[-1] * (1 + act_ratio))
-        market_net_values.append(market_net_values[-1] * (1 + market_ratio))
-
-        market._pass_a_week()
-
-        dates.append(market.current_date.date())
-
-        plot_nav_curve(strategy_net_values, act_net_values, market_net_values, dates, turnover_rate)
-        time_end = time.time()
-        print('Search Time:', time_end - time_start)
 
 if __name__ == '__main__':
 
@@ -284,13 +224,13 @@ if __name__ == '__main__':
     print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
     print('Start Date: ' + str(config.start_date))
     print('Similar NB: ' + str(config.nb_similar_make_prediction))
-    print('Market Ind: ' + str(config.market_index))
-    print('Speed Meth: ' + str(config.speed_method))
     print('#####################################')
 
-    regression_test(make_prediction2)
-    # regression_test(make_prediction)
-    # regression_test(make_index_prediction)
+    while config.start_date <= config.regression_end_date:
+        print('\n[Current Date]: ' + str(market.current_date.date()))
+        make_prediction2()
+        # make_prediction()
+        # make_index_prediction()
 
     time_end = time.time()
     print('Search Time:', time_end - time_start)
