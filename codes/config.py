@@ -33,7 +33,7 @@ class Config:
 
 
         self.update_start = '2018-01-01'  # 更新数据的开始时间
-        self.update_end = '2018-01-05'  # 更新数据的结束时间
+        self.update_end = '2018-05-09'  # 更新数据的结束时间
 
         self.start_date = pd.to_datetime('2017-01-03') #回测的开始时间
         self.regression_days = 1000

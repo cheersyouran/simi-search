@@ -28,7 +28,7 @@ def _format_code(data):
 
 def get_traiding_day(start=None, end=None):
     all_trading_day = pd.read_csv(config.TRAINING_DAY)
-    all_trading_day.columns = [['DATE', 'OPEN']]
+    all_trading_day.columns = ['DATE', 'OPEN']
     all_trading_day = all_trading_day[all_trading_day['OPEN'] == 1]
 
     if start is None:
@@ -207,6 +207,10 @@ if __name__ == '__main__':
     end = config.update_end
 
     zz800_dataset, zz800_fft_dataset = update_data()
-    zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
-    zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
+    # zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    # zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
+
+    zz800_dataset.to_csv('1.csv', index= False)
+    zz800_fft_dataset.to_csv('2.csv', index=False)
+
     print('')
