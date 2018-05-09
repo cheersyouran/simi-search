@@ -17,7 +17,7 @@ class Config:
         return cls.__instance
 
     def __init__(self):
-        print('Init config!', os.getpid())
+        print('Init Config!', os.getpid())
 
         # 文件路径相关参数
         self.rootPath = os.path.split(os.path.abspath(os.path.dirname(__file__)))[0]
@@ -60,6 +60,7 @@ class Config:
         self.similarity_method = 'euclidean'  # 'pearsonr'
 
         self.cores = 100
+        self.nb_codes = 800
 
         # 输出文件地址
         name = str(self.start_date.date()) + '_' + str(self.speed_method) + '_' + str(self.nb_similar_make_prediction)

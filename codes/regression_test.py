@@ -1,6 +1,5 @@
 import sys
 import os
-import psutil
 
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
@@ -8,7 +7,7 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'Youran' in config.rootPath:
+if 'D:' in config.rootPath:
     config.nb_codes = 4
     config.plot_simi_stock = False
     config.nb_similar_of_each_stock = 100
@@ -91,7 +90,7 @@ def make_prediction():
         act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
 
     action, pred_ratio, act_ratio, market_ratio = \
-        get_action_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
+        get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
                                   act_ratios1, act_ratios5, act_ratios10,act_ratios20)
 
     return action, pred_ratio, act_ratio, market_ratio
@@ -128,13 +127,10 @@ def make_prediction2():
                 continue
             size += 1
 
-            if config.speed_method in ['rm_market_vr_fft']:
-                pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
-                pred_market_ratios5 = market.get_span_market_ratio(pred, 5)
-                pred_market_ratios10 = market.get_span_market_ratio(pred, 10)
-                pred_market_ratios20 = market.get_span_market_ratio(pred, 20)
-            else:
-                pred_market_ratios1, pred_market_ratios5, pred_market_ratios10, pred_market_ratios20 = 0, 0, 0, 0
+            pred_market_ratios1 = market.get_span_market_ratio(pred, 1)
+            pred_market_ratios5 = market.get_span_market_ratio(pred, 5)
+            pred_market_ratios10 = market.get_span_market_ratio(pred, 10)
+            pred_market_ratios20 = market.get_span_market_ratio(pred, 20)
 
             pred_ratio1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios1
             pred_ratio5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios5
@@ -221,7 +217,6 @@ if __name__ == '__main__':
 
     print('\n#####################################')
     print('Cpu Core Num: ', os.cpu_count())
-    print('Memory in all :', psutil.virtual_memory().total / 1024 / 1024 / 1024, 'G')
     print('Start Date: ' + str(config.start_date))
     print('Similar NB: ' + str(config.nb_similar_make_prediction))
     print('#####################################')
