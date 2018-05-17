@@ -6,7 +6,7 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'D:' or 'Youran' in config.rootPath:
+if 'D:' or 'Youran/Projects/' in config.rootPath:
     print('Using Test Config!')
     config.nb_codes = 4
     config.plot_simi_stock = False
@@ -212,6 +212,7 @@ if __name__ == '__main__':
     print('\n#####################################')
     print('Cpu Core Num: ', os.cpu_count())
     print('Start Date: ' + str(config.start_date))
+    print('Codes NB: ' + str(config.nb_codes))
     print('Similar NB: ' + str(config.nb_similar_make_prediction))
     print('#####################################')
 
