@@ -1,13 +1,12 @@
 import sys
 import os
-
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'D:' in config.rootPath:
+if 'D:' or 'Youran' in config.rootPath:
     config.nb_codes = 4
     config.plot_simi_stock = False
     config.nb_similar_of_each_stock = 100
@@ -16,7 +15,6 @@ if 'D:' in config.rootPath:
     config.cores = 4
 
 import time
-import numpy as np
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
@@ -26,6 +24,7 @@ from collections import OrderedDict
 from codes.search import predict_stock_base_on_similars, find_similar_of_a_stock
 from codes.market import market
 from scipy.stats.stats import pearsonr
+
 
 def make_index_prediction():
 
@@ -48,12 +47,6 @@ def make_index_prediction():
     act10 = (m['800_MARKET'].iloc[10] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
     act20 = (m['800_MARKET'].iloc[20] - m['800_MARKET'].iloc[0]) / m['800_MARKET'].iloc[0]
 
-    if pred5 > 0:
-        action = 1
-    else:
-        action = -1
-
-    return action, pred5, act5, act5
 
 # 汇总800*20支相似股票
 def make_prediction():
@@ -89,11 +82,11 @@ def make_prediction():
         act_ratios10.append((act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
         act_ratios20.append((act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
 
-    action, pred_ratio, act_ratio, market_ratio = \
-        get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5,pred_ratios10, pred_ratios20,
-                                  act_ratios1, act_ratios5, act_ratios10,act_ratios20)
+    preds = [pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20]
+    acts = [act_ratios1, act_ratios5, act_ratios10, act_ratios20]
 
-    return action, pred_ratio, act_ratio, market_ratio
+    get_prediction_and_calcu_corr(codes, preds, acts)
+
 
 # 先对每支股票的找200支相似，然后汇总800*200后取前4000
 def make_prediction2():
@@ -122,8 +115,6 @@ def make_prediction2():
             if pred.shape[0] != 30:
                 print(pattern_code)
                 print(pred.shape[0])
-                # print(pred.iloc[0])
-                # print(pred.iloc[-1])
                 continue
             size += 1
 
@@ -172,44 +163,46 @@ def make_prediction2():
     tops.groupby(['pattern']).apply(func=apply)
     print('[Codes left] ', len(codes))
 
+    preds = [pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20]
+    acts = [act_ratios1, act_ratios5, act_ratios10, act_ratios20]
     if config.is_regression_test:
-        return get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
-                                         act_ratios1, act_ratios5, act_ratios10, act_ratios20)
+        return get_prediction_and_calcu_corr(codes, preds, acts)
     else:
-        return get_prediction(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20)
+        return get_prediction(codes, preds)
 
 
-def get_prediction_and_calcu_corr(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20,
-                              act_ratios1, act_ratios5, act_ratios10, act_ratios20):
+def get_prediction_and_calcu_corr(codes, pred, act):
 
     pred_act_result = pd.DataFrame(
-        OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date,'PRED1': pred_ratios1,
-                     'PRED5': pred_ratios5, 'PRED10': pred_ratios10, 'PRED20': pred_ratios20,
-                     'ACT1': act_ratios1, 'ACT5': act_ratios5, 'ACT10': act_ratios10, 'ACT20': act_ratios20}))
+        OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date, 'PRED1': pred[0],
+                     'PRED5': pred[1], 'PRED10': pred[2], 'PRED20': pred[3],
+                     'ACT1': act[0], 'ACT5': act[1], 'ACT10': act[2], 'ACT20': act[3]}))
 
     pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
 
-    p1 = pearsonr(pred_ratios1, act_ratios1)[0]
-    p2 = pearsonr(pred_ratios5, act_ratios5)[0]
-    p3 = pearsonr(pred_ratios10, act_ratios10)[0]
-    p4 = pearsonr(pred_ratios20, act_ratios20)[0]
+    p1 = pearsonr(pred[0], act[0])[0]
+    p2 = pearsonr(pred[1], act[1])[0]
+    p3 = pearsonr(pred[2], act[2])[0]
+    p4 = pearsonr(pred[3], act[3])[0]
 
     pearson = pd.DataFrame(
         OrderedDict({'CURRENT_DATE': [market.current_date], 'P1': [p1], 'P2': [p2], 'P3': [p3], 'P4': [p4]}))
     pearson.to_csv(config.PEARSON_CORR_RESLUT, mode='a', header=False, index=False)
 
-    print('[Correlation] ', p1)
-    print('[Correlation] ', p2)
-    print('[Correlation] ', p3)
-    print('[Correlation] ', p4)
+    print('[Correlation1] ', p1)
+    print('[Correlation5] ', p2)
+    print('[Correlation10] ', p3)
+    print('[Correlation20] ', p4)
 
-def get_prediction(codes, pred_ratios1, pred_ratios5, pred_ratios10, pred_ratios20):
-    pred_act_result = pd.DataFrame(
-        OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date, 'PRED1': pred_ratios1,
-                     'PRED5': pred_ratios5, 'PRED10': pred_ratios10, 'PRED20': pred_ratios20}))
+
+def get_prediction(codes, pred):
+    pred_act_result = pd.DataFrame(OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date,
+                                                'PRED1': pred[0], 'PRED5': pred[1],
+                                                'PRED10': pred[2], 'PRED20': pred[3]}))
 
     pred_act_result = pred_act_result.sort_values(ascending=False, by=['PRED5'])
     pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
+
 
 if __name__ == '__main__':
 

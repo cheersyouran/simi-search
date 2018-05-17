@@ -16,6 +16,7 @@ sys.path.append(rootPath)
 from codes.base import norm
 from codes.config import config
 
+
 def _format_code(data):
     def apply(x):
         if int(x[0]) >= 6:
@@ -25,6 +26,7 @@ def _format_code(data):
 
     data['CODE'] = data['CODE'].apply(func=apply)
     return data
+
 
 def get_traiding_day(start=None, end=None):
     all_trading_day = pd.read_csv(config.TRAINING_DAY)
@@ -39,6 +41,7 @@ def get_traiding_day(start=None, end=None):
         trading_day = all_trading_day[(all_trading_day['DATE'] >= start) & (all_trading_day['DATE'] <= end)]
     return trading_day, all_trading_day
 
+
 def _gen_zz800_stock_list():
     '''
     :return: 生成中证800股票代码，[code, name, weight, date]
@@ -51,6 +54,7 @@ def _gen_zz800_stock_list():
     zz800 = zz800.sort_values(ascending=True, by=['CODE'])
     zz800.to_csv(config.ZZ800_CODES, index=False)
     return zz800
+
 
 def _get_new_zz800_data(trading_day):
 
@@ -83,7 +87,15 @@ def _get_new_zz800_data(trading_day):
     hist_data = _format_code(hist_data)
     return hist_data
 
+
 def update_data():
+
+    def update_trading_date():
+        trading_day = ts.trade_cal()
+        trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
+        trading_day = trading_day[trading_day['isOpen'] == 1]
+        trading_day.columns = [['DATE', 'OPEN']]
+        trading_day.to_csv(config.TRAINING_DAY, index=False)
 
     def _update_quotation_data():
 
@@ -101,7 +113,7 @@ def update_data():
 
         update_dataset = dataset.merge(new_zz800_data, how='left', on=['CODE', 'DATE'])
         new_dataset = zz800_dataset.append(update_dataset)
-
+        new_dataset = new_dataset.drop_duplicates(['CODE', 'DATE'])
         new_dataset = new_dataset.sort_values(ascending=True, by=['CODE', 'DATE'])
         return new_dataset
 
@@ -116,16 +128,18 @@ def update_data():
 
         fft_dataset = pd.read_csv(config.ZZ800_RM_VR_FFT, low_memory=False)
         new_fft_dataset = fft_dataset.append(new_fft_dataset)
-
         new_fft_dataset = new_fft_dataset.sort_values(ascending=True, by=['CODE', 'DATE'])
+        new_fft_dataset = new_fft_dataset.drop_duplicates(['CODE', 'DATE'])
         return new_fft_dataset
 
+    update_trading_date()
     trading_day, all_trading_day = get_traiding_day(start, end)
 
     new_dataset = _update_quotation_data()
     zz800_fft_dataset = _update_RMVR_fft_data(new_dataset)
 
     return new_dataset, zz800_fft_dataset
+
 
 def init_dataset_matrix():
     '''
@@ -158,8 +172,8 @@ def init_dataset_matrix():
         return dataset
 
     dataset = _mapping_to_dataset()
-
     dataset.to_csv(config.ZZ800_DATA, index=False)
+
 
 def init_800_RMVR_fft_data(input_data=None):
     print('init 800 remove-market-ratio fft data...')
@@ -190,9 +204,9 @@ def init_800_RMVR_fft_data(input_data=None):
 
     for i in range(config.fft_level):
         ind = str(i+1)
-        data['fft' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
-        data['deg' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
-        print(ind)
+        data.loc[:, 'fft' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='fft')['RET'].values
+        data.loc[:, 'deg' + ind] = data.groupby(['CODE'])[['CODE', '300_RATIO', 'RET']].apply(func=apply, freq=i, method='deg')['RET'].values
+        print('Calculating fft: ', ind)
     if input_data is None:
         data.to_csv(config.ZZ800_RM_VR_FFT, index=False)
     else:
@@ -207,10 +221,7 @@ if __name__ == '__main__':
     end = config.update_end
 
     zz800_dataset, zz800_fft_dataset = update_data()
-    # zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
-    # zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
-
-    zz800_dataset.to_csv('1.csv', index= False)
-    zz800_fft_dataset.to_csv('2.csv', index=False)
+    zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
 
     print('')

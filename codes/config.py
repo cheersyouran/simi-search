@@ -9,6 +9,7 @@ pd.set_option('precision', 3)
 np.set_printoptions(precision=3)
 np.set_printoptions(threshold=np.nan)
 
+
 class Config:
     __instance = None
     def __new__(cls, *args, **kwargs):
@@ -28,20 +29,19 @@ class Config:
         self.MARKET_RATIO = self.rootPath + '/data/index_ratio.csv'
         self.TRAINING_DAY = self.rootPath + '/data/trading_day.csv'
 
-        self.speed_method = 'value_ratio_fft_euclidean' # for 沪深300指数预测
+        # self.speed_method = 'value_ratio_fft_euclidean' # for 沪深300指数预测
         self.speed_method = 'rm_market_vr_fft' # for 沪深800选股
 
+        self.update_start = '2018-05-16'  # 更新数据的开始时间
+        self.update_end = '2018-05-17'  # 更新数据的结束时间
 
-        self.update_start = '2018-01-01'  # 更新数据的开始时间
-        self.update_end = '2018-05-09'  # 更新数据的结束时间
-
-        self.start_date = pd.to_datetime('2017-01-03') #回测的开始时间
-        self.regression_days = 1000
+        self.start_date = pd.to_datetime('2017-05-14') #回测的开始时间
+        self.regression_days = 12
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
 
         self.auto_update = False # 回测时是否自动更新数据
         self.plot_simi_stock = False # 是否画出相似股票
-        self.is_regression_test = True # 是回测还是预测
+        self.is_regression_test = False # 是回测还是预测
 
         # 相似性查找参数
         self.pattern_length = 30
@@ -57,7 +57,7 @@ class Config:
         self.beata = np.multiply([1, 1, 1, 1, 1], math.pi / 180)
 
         self.fft_level = 5
-        self.similarity_method = 'euclidean'  # 'pearsonr'
+        self.similarity_method = 'euclidean'  # or 'pearsonr'
 
         self.cores = 100
         self.nb_codes = 800

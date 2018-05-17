@@ -3,6 +3,7 @@ from scipy.stats.stats import pearsonr
 from codes.market import market
 from codes.base import plot_simi_stock, norm, weighted_distance
 
+
 def find_similar_of_a_stock(code):
     all_data, pattern, targets = market.get_historical_data(end_date=config.start_date, code=code)
 
@@ -43,6 +44,7 @@ def find_similar_of_a_stock(code):
 
     return tops
 
+
 def predict_stock_base_on_similars(code):
     tops = find_similar_of_a_stock(code)
 
@@ -70,6 +72,7 @@ def predict_stock_base_on_similars(code):
 
     size = tops.shape[0]
     return [code, pred_ratios1/size, pred_ratios5/size, pred_ratios10/size, pred_ratios20/size]
+
 
 if __name__ == '__main__':
 

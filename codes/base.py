@@ -7,16 +7,17 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.spatial.distance import euclidean
-from sklearn import preprocessing
 from codes.config import *
 
+
 def weighted_distance(x, y, length=config.pattern_length):
-    if config.weighted_dist == True:
+    if config.weighted_dist:
         weight = np.arange(config.weight_a, config.weight_b, (config.weight_b - config.weight_a) / length)
         dist = np.abs(np.multiply(pd.DataFrame(x).values - pd.DataFrame(y).values, weight.reshape(length, 1)))
         return np.sum(dist)
     else:
         return euclidean(x, y)
+
 
 def norm(X, ratio=None):
     if ratio is None:
@@ -27,8 +28,10 @@ def norm(X, ratio=None):
     result = np.divide(ret_, r)
     return result
 
+
 def plot_simi_stock(top, data, pattern, filename, codes):
     print('plot simi stock of ', codes, ' ...')
+
     def init_plot_data():
         plot_codes = np.append(top['CODE'].values, codes)
         plot_dates = list(top['DATE'].values)
@@ -61,7 +64,6 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     for i in range(config.nb_similar_make_prediction):
         a = weighted_distance(norm_plot_prices[i], norm_plot_prices[-1], config.pattern_length)
         b = top.iloc[i][config.similarity_method]
-        # print(a, b)
         assert a == b, 'calcu error!'
 
     for i in range(plot_codes.size):
@@ -77,6 +79,7 @@ def plot_simi_stock(top, data, pattern, filename, codes):
     plt.savefig(config.rootPath + '/pic/' + filename +'.png')
     plt.close()
 
+
 def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, turnover_rate):
     plt.plot(dates, strategy_net_value, 'r-', label=strategy_net_value, linewidth=1.5)
     plt.plot(dates, act_net_value, 'k-', label=act_net_value, linewidth=1.5)
@@ -91,6 +94,7 @@ def plot_nav_curve(strategy_net_value, act_net_value, market_net_value, dates, t
     plt.ioff()
     plt.savefig(config.regression_result)
     plt.close()
+
 
 def compare_plot(x1, x2):
     plt.plot(x1)

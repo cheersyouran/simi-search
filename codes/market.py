@@ -31,9 +31,7 @@ class Market:
 
     def _init_all_data(self, speed_method=config.speed_method):
 
-        if speed_method == 'fft_euclidean':
-            file = config.ZZ800_FFT_DATA
-        elif speed_method == 'value_ratio_fft_euclidean':
+        if speed_method == 'value_ratio_fft_euclidean':
             file = config.ZZ800_VALUE_RATIO_FFT_DATA
         elif speed_method == 'rm_market_vr_fft':
             file = config.ZZ800_RM_VR_FFT
@@ -45,30 +43,21 @@ class Market:
                 self.all_data = rm_vr_data
             else:
                 self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
-                # self.all_data = self.all_data.drop_duplicates()
 
     def _init_codes(self):
-        path = config.ZZ800_CODES
-
         def apply(x):
             if int(x[0]) >= 6:
                 return x + '.SH'
             else:
                 return x + '.SZ'
 
-        codes = pd.read_csv(path, dtype={'CODE': str})
+        codes = pd.read_csv(config.ZZ800_CODES, dtype={'CODE': str})
         codes['CODE'] = codes['CODE'].apply(func=apply)
         self.codes = codes['CODE'].head(config.nb_codes).values.flatten()
 
     def _init_trading_days(self):
-        if config.auto_update:
-            trading_day = ts.trade_cal()
-            trading_day['calendarDate'] = trading_day['calendarDate'].apply(lambda x: pd.to_datetime(x))
-            trading_day = trading_day[trading_day['isOpen'] == 1]
-            trading_day.columns = [['DATE', 'OPEN']]
-            self.trading_days = trading_day
-        else:
-            self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
+
+        self.trading_days = pd.read_csv(config.TRAINING_DAY, parse_dates=['DATE'])
 
     def _pass_a_day(self):
         self.current_date = pd.to_datetime(self.trading_days[self.trading_days['DATE'] > self.current_date].head(1).values[0][0])
@@ -102,18 +91,18 @@ class Market:
         all_data = self.all_data
 
         if code is not None:
-            if start_date == None and end_date != None:
+            if start_date is None and end_date is not None:
                 pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date)].tail(pattern_length)
-            elif start_date != None and end_date == None:
+            elif start_date is not None and end_date is None:
                 pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] >= start_date)].head(pattern_length)
-            elif start_date != None and end_date != None:
+            elif start_date is not None and end_date is not None:
                 pattern = all_data[(all_data['CODE'] == code) & (all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
         else:
-            if start_date == None and end_date != None:
+            if start_date is None and end_date is not None:
                 pattern = all_data[(all_data['DATE'] <= end_date)].tail(pattern_length)
-            elif start_date != None and end_date == None:
+            elif start_date is not None and end_date is None:
                 pattern = all_data[(all_data['DATE'] >= start_date)].head(pattern_length)
-            elif start_date != None and end_date != None:
+            elif start_date is not None and end_date is not None:
                 pattern = all_data[(all_data['DATE'] <= end_date) & (all_data['DATE'] >= start_date)]
 
         return pattern
