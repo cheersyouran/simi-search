@@ -7,6 +7,7 @@ sys.path.append(rootPath)
 
 from codes.config import config
 if 'D:' or 'Youran' in config.rootPath:
+    print('Using Test Config!')
     config.nb_codes = 4
     config.plot_simi_stock = False
     config.nb_similar_of_each_stock = 100
@@ -219,6 +220,7 @@ if __name__ == '__main__':
         make_prediction2()
         # make_prediction()
         # make_index_prediction()
+        market._pass_a_day()
 
     time_end = time.time()
     print('Search Time:', time_end - time_start)

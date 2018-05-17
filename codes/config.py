@@ -36,7 +36,7 @@ class Config:
         self.update_end = '2018-05-17'  # 更新数据的结束时间
 
         self.start_date = pd.to_datetime('2017-05-14') #回测的开始时间
-        self.regression_days = 12
+        self.regression_days = 5
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
 
         self.auto_update = False # 回测时是否自动更新数据
