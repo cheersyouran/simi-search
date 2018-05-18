@@ -6,7 +6,7 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'D:' or 'Youran/Projects/' in config.rootPath:
+if 'Youran/Projects/' in config.rootPath:
     print('Using Test Config!')
     config.nb_codes = 4
     config.plot_simi_stock = False
@@ -101,8 +101,11 @@ def make_prediction2():
     print("tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
+    tops.to_csv(str(market.current_date.date()) + '_800_similar_codes.csv', index=False)
+
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
+    print("tops:", len(tops))
 
     def apply(x):
         x_ = x.head(config.nb_similar_make_prediction)
