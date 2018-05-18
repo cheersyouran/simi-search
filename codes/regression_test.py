@@ -101,7 +101,7 @@ def make_prediction2():
     print("tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
-    tops.to_csv(str(market.current_date.date()) + '_800_similar_codes.csv', index=False)
+    tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_800_similar_codes.csv', index=False)
 
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
@@ -151,7 +151,7 @@ def make_prediction2():
             act_ratios20.append(
                 (act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
         else:
-            print('正在进行实际预测, 无实际值...')
+            print('正在进行实际预测, 无实际值...', top['CODE'])
 
         pred_ratios1.append(pred_ratio1 / size)
         pred_ratios5.append(pred_ratio5 / size)

@@ -8,6 +8,7 @@ def find_similar_of_a_stock(code):
     all_data, pattern, targets = market.get_historical_data(end_date=config.start_date, code=code)
 
     if pattern is None:
+        print('pattern is None for ', code)
         return None
 
     ALPHA = config.alpha

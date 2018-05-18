@@ -72,7 +72,10 @@ class Market:
         targets = self.all_data[self.all_data['CODE'] != code].reset_index(drop=True)
         start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
 
-        targets = targets[targets['DATE'] < start].tail(1500)
+        def apply(x):
+            return x.tail(1500)
+
+        targets = targets[targets['DATE'] < start].groupby(['CODE']).apply(func=apply)
 
         self.pattern = self.all_data[(self.all_data['CODE'] == code) &
                                      (self.all_data['DATE'] <= end_date) &
