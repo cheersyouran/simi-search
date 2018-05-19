@@ -60,8 +60,9 @@ def _get_new_zz800_data(trading_day):
 
     start_date = trading_day.iloc[0]['DATE']
     end_date = trading_day.iloc[-1]['DATE']
+    nb_date = trading_day.shape[0]
 
-    codes = _gen_zz800_stock_list()['CODE'].head(10)
+    codes = _gen_zz800_stock_list()['CODE']
     if codes.empty:
         raise Exception('No codes file found!')
 
@@ -69,14 +70,18 @@ def _get_new_zz800_data(trading_day):
     datas = []
     for code in codes:
         data = ts.get_hist_data(code, start=start_date, end=end_date)
-        if data is None or data.size == 0:
-            print(code)
-            continue
-        else:
-            data['800_ratio'] = 0
-            data['code'] = code
-            data = data.reset_index()
-            datas.append(data[['close', 'code', 'date', 'p_change', '800_ratio']])
+        if data is None or data.shape[0] != nb_date:
+            data = ts.get_k_data(code, start='2010-01-01', end=end_date).reset_index().tail(nb_date + 1)
+            if data is None or data.shape[0] != nb_date + 1:
+                print('停牌或找不到：', code)
+                continue
+            data['p_change'] = data['close'] / data['close'].shift(1) - 1
+
+            data = data.tail(nb_date)
+        data['800_ratio'] = 0
+        data['code'] = code
+        data = data.reset_index()
+        datas.append(data[['close', 'code', 'date', 'p_change', '800_ratio']])
 
     hist_data = pd.concat(datas)
     hist_data.columns = ['close', 'code', 'date', 'ret', '800_ratio']
