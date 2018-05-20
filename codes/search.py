@@ -8,7 +8,7 @@ def find_similar_of_a_stock(code):
     all_data, pattern, targets = market.get_historical_data(end_date=config.start_date, code=code)
 
     if pattern is None:
-        print('Pattern is None for ', code)
+        print('---Pattern is None for ', code)
         return None
 
     ALPHA = config.alpha
@@ -43,7 +43,7 @@ def find_similar_of_a_stock(code):
     if config.plot_simi_stock:
         plot_simi_stock(tops.head(config.nb_similar_make_prediction), all_data, pattern, code + '_simi_result', codes=code)
 
-    print('Finish searh: ', code)
+    print('---Finish searching : ', code)
     return tops
 
 

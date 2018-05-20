@@ -92,20 +92,23 @@ def make_prediction():
 # 先对每支股票的找200支相似，然后汇总800*200后取前4000
 def make_prediction2():
 
+    time_start = time.time()
     pool = Pool(processes=config.cores)
     tops = pool.map(find_similar_of_a_stock, market.codes)
     pool.close()
+    time_end = time.time()
+    print('Search Time:', time_end - time_start)
 
-    print("tops:", len(tops))
+    print("---tops:", len(tops))
     tops = [top for top in tops if top is not None and top.shape[0] != 0]
-    print("tops:", len(tops))
+    print("---tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
     tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_800_similar_codes.csv', index=False)
 
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
-    print("tops:", len(tops))
+    print("---tops:", len(tops))
 
     def apply(x):
         x_ = x.head(config.nb_similar_make_prediction)
@@ -117,8 +120,7 @@ def make_prediction2():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
 
             if pred.shape[0] != 30:
-                print(pattern_code)
-                print(pred.shape[0])
+                print('---Cannot found 30 ', top['CODE'], ' for ', pattern_code, ' start form ' , str(top['DATE']))
                 continue
             size += 1
 
@@ -227,4 +229,4 @@ if __name__ == '__main__':
         market._pass_a_day()
 
     time_end = time.time()
-    print('Search Time:', time_end - time_start)
+    print('Total Search Time:', time_end - time_start)

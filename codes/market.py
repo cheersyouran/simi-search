@@ -73,7 +73,7 @@ class Market:
         start = self.trading_days[self.trading_days['DATE'] <= end_date].tail(30).head(1).values[0][0]
 
         def apply(x):
-            return x.tail(1500)
+            return x.tail(config.slide_window)
 
         targets = targets[targets['DATE'] < start].groupby(['CODE']).apply(func=apply)
 
