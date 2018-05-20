@@ -35,7 +35,7 @@ class Config:
         self.update_start = '2018-01-01'  # 更新数据的开始时间
         self.update_end = '2018-05-18'  # 更新数据的结束时间
 
-        self.start_date = pd.to_datetime('2018-05-15') #回测的开始时间
+        self.start_date = pd.to_datetime('2018-05-16') #回测的开始时间
         self.regression_days = 5
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
 
@@ -50,7 +50,7 @@ class Config:
         self.nb_similar_of_all_similar = 4000  # 从所有股票的相似票中选择top N
         self.nb_similar_of_each_stock = 200
 
-        self.slide_window = 1200
+        self.slide_window = 1500
 
         self.weighted_dist = True
         self.weight_a = 1
@@ -61,7 +61,7 @@ class Config:
         self.fft_level = 5
         self.similarity_method = 'euclidean'  # or 'pearsonr'
 
-        self.cores = 100
+        self.cores = 24
         self.nb_codes = 800
 
         # 输出文件地址
