@@ -151,7 +151,7 @@ def make_prediction2():
             act_ratios20.append(
                 (act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
         else:
-            print('正在进行实际预测, 无实际值...', top['CODE'])
+            print('正在进行实际预测, 无实际值...', pattern_code)
 
         pred_ratios1.append(pred_ratio1 / size)
         pred_ratios5.append(pred_ratio5 / size)
