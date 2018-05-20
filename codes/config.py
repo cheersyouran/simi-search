@@ -50,7 +50,7 @@ class Config:
         self.nb_similar_of_all_similar = 4000  # 从所有股票的相似票中选择top N
         self.nb_similar_of_each_stock = 200
 
-        self.slide_window = 100
+        self.slide_window = 1200
 
         self.weighted_dist = True
         self.weight_a = 1

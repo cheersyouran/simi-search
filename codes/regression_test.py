@@ -120,7 +120,7 @@ def make_prediction2():
             pred = market.get_data(start_date=top['DATE'], code=top['CODE'])
 
             if pred.shape[0] != 30:
-                print('---Cannot found 30 ', top['CODE'], ' for ', pattern_code, ' start form ' , str(top['DATE']))
+                print('---Cannot found 30 ', top['CODE'], ' for ', pattern_code, ' start form ', str(top['DATE']))
                 continue
             size += 1
 
@@ -129,10 +129,15 @@ def make_prediction2():
             pred_market_ratios10 = market.get_span_market_ratio(pred, 10)
             pred_market_ratios20 = market.get_span_market_ratio(pred, 20)
 
-            pred_ratio1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios1
-            pred_ratio5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios5
-            pred_ratio10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
-            pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
+            # pred_ratio1 += (pred.iloc[1]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios1
+            # pred_ratio5 += (pred.iloc[5]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios5
+            # pred_ratio10 += (pred.iloc[10]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios10
+            # pred_ratio20 += (pred.iloc[20]['CLOSE'] - pred.iloc[0]['CLOSE']) / pred.iloc[0]['CLOSE'] - pred_market_ratios20
+
+            pred_ratio1 += market.get_span_ret(pred, 1) - pred_market_ratios1
+            pred_ratio5 += market.get_span_ret(pred, 5) - pred_market_ratios5
+            pred_ratio10 += market.get_span_ret(pred, 10) - pred_market_ratios10
+            pred_ratio20 += market.get_span_ret(pred, 20) - pred_market_ratios20
 
         if config.is_regression_test:
             act = market.get_data(start_date=market.current_date, code=pattern_code)
@@ -144,14 +149,19 @@ def make_prediction2():
             else:
                 act_market_ratios1, act_market_ratios5, act_market_ratios10, act_market_ratios20 = 0, 0, 0, 0
 
-            act_ratios1.append(
-                (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
-            act_ratios5.append(
-                (act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
-            act_ratios10.append(
-                (act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
-            act_ratios20.append(
-                (act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
+            # act_ratios1.append(
+            #     (act.iloc[1]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios1)
+            # act_ratios5.append(
+            #     (act.iloc[5]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios5)
+            # act_ratios10.append(
+            #     (act.iloc[10]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios10)
+            # act_ratios20.append(
+            #     (act.iloc[20]['CLOSE'] - act.iloc[0]['CLOSE']) / act.iloc[0]['CLOSE'] - act_market_ratios20)
+            act_ratios1.append(market.get_span_ret(act, 1) - act_market_ratios1)
+            act_ratios5.append(market.get_span_ret(act, 5) - act_market_ratios5)
+            act_ratios10.append(market.get_span_ret(act, 10) - act_market_ratios10)
+            act_ratios20.append(market.get_span_ret(act, 20) - act_market_ratios20)
+
         else:
             print('正在进行实际预测, 无实际值...', pattern_code)
 
@@ -184,7 +194,12 @@ def get_prediction_and_calcu_corr(codes, pred, act):
                      'PRED5': pred[1], 'PRED10': pred[2], 'PRED20': pred[3],
                      'ACT1': act[0], 'ACT5': act[1], 'ACT10': act[2], 'ACT20': act[3]}))
 
-    pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
+    path = config.rootPath + '/output/pred' + '_' + \
+           str(market.current_date.date()) + '_' + \
+           str(config.speed_method) + '_' + \
+           str(config.nb_similar_make_prediction) + '.csv'
+
+    pred_act_result.to_csv(path, index=False)
 
     p1 = pearsonr(pred[0], act[0])[0]
     p2 = pearsonr(pred[1], act[1])[0]
@@ -202,12 +217,17 @@ def get_prediction_and_calcu_corr(codes, pred, act):
 
 
 def get_prediction(codes, pred):
-    pred_act_result = pd.DataFrame(OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date,
-                                                'PRED1': pred[0], 'PRED5': pred[1],
-                                                'PRED10': pred[2], 'PRED20': pred[3]}))
+    pred_result = pd.DataFrame(OrderedDict({'CODE': codes, 'CURRENT_DATE': market.current_date, 'PRED1': pred[0],
+                                            'PRED5': pred[1], 'PRED10': pred[2], 'PRED20': pred[3]}))
 
-    pred_act_result = pred_act_result.sort_values(ascending=False, by=['PRED5'])
-    pred_act_result.to_csv(config.PRDT_AND_ACT_RESULT, mode='a', header=False, index=False)
+    pred_result = pred_result.sort_values(ascending=False, by=['PRED5'])
+
+    path = config.rootPath + '/output/pred' + '_' + \
+           str(market.current_date.date()) + '_' + \
+           str(config.speed_method) + '_' + \
+           str(config.nb_similar_make_prediction) + '.csv'
+
+    pred_result.to_csv(path, index=False)
 
 
 if __name__ == '__main__':

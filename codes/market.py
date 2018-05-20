@@ -118,5 +118,9 @@ class Market:
         array = np.cumprod(df['300_RATIO'] / 100 + 1).values - 1
         return array[n]
 
+    def get_span_ret(self, df, n):
+        array = np.cumprod(df['RET'] / 100 + 1).values - 1
+        return array[n]
+
 
 market = Market()
