@@ -7,7 +7,7 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'Youran/Projects/' in config.rootPath:
+if 'Youran/Projects/' not in config.rootPath:
     print('Using Test Config!')
     config.nb_codes = 8
     config.plot_simi_stock = False
@@ -97,7 +97,7 @@ def make_prediction2():
     pool = Pool(processes=config.cores)
     tops = []
     for codes in np.split(market.codes, min(20, os.cpu_count()), axis=0):
-        print(codes)
+        # pd.DataFrame(codes).to_csv('tmp.csv', mode='a', header=False, index=False)
         result = pool.map(find_similar_of_a_stock, codes)
         tops.append([i for i in result])
 
