@@ -1,5 +1,6 @@
 import sys
 import os
+import numpy as np
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(curPath)
@@ -8,7 +9,7 @@ sys.path.append(rootPath)
 from codes.config import config
 if 'Youran/Projects/' in config.rootPath:
     print('Using Test Config!')
-    config.nb_codes = 4
+    config.nb_codes = 8
     config.plot_simi_stock = False
     config.nb_similar_of_each_stock = 100
     config.nb_similar_make_prediction = 5
@@ -94,7 +95,12 @@ def make_prediction2():
 
     time_start = time.time()
     pool = Pool(processes=config.cores)
-    tops = pool.map(find_similar_of_a_stock, market.codes)
+    tops = []
+    for codes in np.split(market.codes, min(20, os.cpu_count()), axis=0):
+        print(codes)
+        result = pool.map(find_similar_of_a_stock, codes)
+        tops.append([i for i in result])
+
     pool.close()
     time_end = time.time()
     print('Search Time:', time_end - time_start)
