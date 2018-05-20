@@ -104,7 +104,7 @@ def make_prediction2():
     print("---tops:", len(tops))
 
     tops = pd.concat(tops).sort_values(ascending=True, by=[config.similarity_method])
-    tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_800_similar_codes.csv', index=False)
+    tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_200_X_800_similars.csv', index=False)
 
     tops = tops[tops[config.similarity_method] > 0]
     tops = tops.head(config.nb_similar_of_all_similar)
