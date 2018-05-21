@@ -61,7 +61,7 @@ class Config:
         self.fft_level = 5
         self.similarity_method = 'euclidean'  # or 'pearsonr'
 
-        self.cores = 24
+        self.cores = 20
         self.nb_codes = 800
 
         # 输出文件地址

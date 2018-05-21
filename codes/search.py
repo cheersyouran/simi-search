@@ -43,7 +43,8 @@ def find_similar_of_a_stock(code):
     if config.plot_simi_stock:
         plot_simi_stock(tops.head(config.nb_similar_make_prediction), all_data, pattern, code + '_simi_result', codes=code)
 
-    print('---Finish searching : ', code)
+    file_name = config.rootPath + '/output/per_200_similars/' + code + '_' + str(market.current_date.date()) + '_200_similars.csv'
+    tops.to_csv(file_name, index=False)
     return tops
 
 

@@ -7,7 +7,7 @@ sys.path.append(curPath)
 sys.path.append(rootPath)
 
 from codes.config import config
-if 'Youran/Projects/' not in config.rootPath:
+if 'Youran/Projects/' in config.rootPath:
     print('Using Test Config!')
     config.nb_codes = 8
     config.plot_simi_stock = False
@@ -15,6 +15,7 @@ if 'Youran/Projects/' not in config.rootPath:
     config.nb_similar_make_prediction = 5
     config.nb_similar_of_all_similar = 15
     config.cores = 4
+    config.slide_window = 100
 
 import time
 import pandas as pd
@@ -97,9 +98,8 @@ def make_prediction2():
     pool = Pool(processes=config.cores)
     tops = []
     for codes in np.split(market.codes, min(20, os.cpu_count()), axis=0):
-        # pd.DataFrame(codes).to_csv('tmp.csv', mode='a', header=False, index=False)
         result = pool.map(find_similar_of_a_stock, codes)
-        tops.append([i for i in result])
+        tops = tops + result
 
     pool.close()
     time_end = time.time()
@@ -168,8 +168,8 @@ def make_prediction2():
             act_ratios10.append(market.get_span_ret(act, 10) - act_market_ratios10)
             act_ratios20.append(market.get_span_ret(act, 20) - act_market_ratios20)
 
-        else:
-            print('正在进行实际预测, 无实际值...', pattern_code)
+        # else:
+        #     print('正在进行实际预测, 无实际值...', pattern_code)
 
         pred_ratios1.append(pred_ratio1 / size)
         pred_ratios5.append(pred_ratio5 / size)
@@ -200,11 +200,7 @@ def get_prediction_and_calcu_corr(codes, pred, act):
                      'PRED5': pred[1], 'PRED10': pred[2], 'PRED20': pred[3],
                      'ACT1': act[0], 'ACT5': act[1], 'ACT10': act[2], 'ACT20': act[3]}))
 
-    path = config.rootPath + '/output/pred' + '_' + \
-           str(market.current_date.date()) + '_' + \
-           str(config.speed_method) + '_' + \
-           str(config.nb_similar_make_prediction) + '.csv'
-
+    path = config.rootPath + '/output/pred' + '_' + str(market.current_date.date()) + '.csv'
     pred_act_result.to_csv(path, index=False)
 
     p1 = pearsonr(pred[0], act[0])[0]
@@ -228,11 +224,7 @@ def get_prediction(codes, pred):
 
     pred_result = pred_result.sort_values(ascending=False, by=['PRED5'])
 
-    path = config.rootPath + '/output/pred' + '_' + \
-           str(market.current_date.date()) + '_' + \
-           str(config.speed_method) + '_' + \
-           str(config.nb_similar_make_prediction) + '.csv'
-
+    path = config.rootPath + '/output/pred' + '_' + str(market.current_date.date()) + '.csv'
     pred_result.to_csv(path, index=False)
 
 
@@ -242,6 +234,7 @@ if __name__ == '__main__':
 
     print('\n#####################################')
     print('Cpu Core Num: ', os.cpu_count())
+    print('Cpu Core Ocp: ', config.cores)
     print('Start Date: ' + str(config.start_date))
     print('Codes NB: ' + str(config.nb_codes))
     print('Similar NB: ' + str(config.nb_similar_make_prediction))
