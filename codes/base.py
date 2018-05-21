@@ -24,8 +24,7 @@ def norm(X, ratio=None):
         raise Exception('No Ratios!')
     ret_ = X + 1
     ratio_ = (ratio / 100) + 1
-    r = ratio_ / pd.DataFrame(ratio_).iloc[0][0]
-    result = np.divide(ret_, r)
+    result = np.divide(ret_, ratio_)
     return result
 
 

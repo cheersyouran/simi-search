@@ -80,12 +80,12 @@ class Market:
         self.pattern = self.all_data[(self.all_data['CODE'] == code) &
                                      (self.all_data['DATE'] <= end_date) &
                                      (self.all_data['DATE'] >= start)]
-
-        self.targets = targets
-        self.targets = self.targets.dropna()
+        targets['OPEN'] = 1
+        self.targets = targets.dropna()
 
         if self.pattern.shape[0] == 0:
             return self.all_data, None, self.targets
+
         self.pattern = self.pattern.reset_index(drop=True)
         return self.all_data, self.pattern, self.targets
 
@@ -115,11 +115,11 @@ class Market:
         return date_
 
     def get_span_market_ratio(self, df, n):
-        array = np.cumprod(df['300_RATIO'] / 100 + 1).values - 1
+        array = np.cumprod(df['300_RATIO'] / 100 + 1).values
         return array[n]
 
     def get_span_ret(self, df, n):
-        array = np.cumprod(df['RET'] / 100 + 1).values - 1
+        array = np.cumprod(df['RET'] / 100 + 1).values
         return array[n]
 
 

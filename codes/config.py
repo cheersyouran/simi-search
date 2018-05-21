@@ -35,7 +35,7 @@ class Config:
         self.update_start = '2018-01-01'  # 更新数据的开始时间
         self.update_end = '2018-05-18'  # 更新数据的结束时间
 
-        self.start_date = pd.to_datetime('2018-05-16') #回测的开始时间
+        self.start_date = pd.to_datetime('2018-05-16') #回测的开始时间。 比如'2018-01-01'，则从'2018-01-02'开始做预测
         self.regression_days = 5
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
 

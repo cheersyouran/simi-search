@@ -25,13 +25,13 @@ def find_similar_of_a_stock(code):
 
         targets['fft_deg'] += targets['fft' + index] + targets['deg' + index]
 
-    sorted_std_diff = targets.sort_values(ascending=True, by=['fft_deg'])
+    sorted_std_diff = targets[(targets['RET'] != 0)]
+    sorted_std_diff = sorted_std_diff.sort_values(ascending=True, by=['fft_deg'])
     sorted_std_diff = sorted_std_diff.head(config.nb_similar_of_each_stock)
 
     distances = []
-    tmp = all_data[all_data['DATE'] < market.current_date.date()]
     for _, ith in sorted_std_diff.iterrows():
-        result = tmp[(tmp['CODE'] == ith['CODE']) & (tmp['DATE'] <= ith['DATE'])].tail(config.pattern_length)
+        result = targets[(targets['CODE'] == targets['CODE']) & (targets['DATE'] <= ith['DATE'])].tail(config.pattern_length)
         distances.append(weighted_distance(norm(result['RET'], result['300_RATIO']),
                                            norm(pattern['RET'], pattern['300_RATIO']),
                                            config.pattern_length))
@@ -43,7 +43,7 @@ def find_similar_of_a_stock(code):
     if config.plot_simi_stock:
         plot_simi_stock(tops.head(config.nb_similar_make_prediction), all_data, pattern, code + '_simi_result', codes=code)
 
-    file_name = config.rootPath + '/output/per_200_similars/' + code + '_' + str(market.current_date.date()) + '_200_similars.csv'
+    file_name = config.rootPath + '/output/per_200_similars/' + str(market.current_date.date()) + '_' + code + '_200_similars.csv'
     tops.to_csv(file_name, index=False)
     return tops
 
