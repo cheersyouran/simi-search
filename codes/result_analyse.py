@@ -3,19 +3,19 @@ import tushare as ts
 from codes.config import *
 
 if __name__ == '__main__':
-    data = pd.read_csv(config.rootPath + '/result_analyse/pred_2018-05-16.csv')
-    data.columns = ['CODE', 'DATE', 'P1', 'P2', 'P3', 'P4']
+    data = pd.read_csv(config.rootPath + '/result_analyse/pred_2018-05-18.csv')
+    data.columns = ['CODE', 'DATE', 'P1', 'P2', 'P3', 'P4', 'P5', 'P10', 'P20']
     data = data.dropna()
     codes = data['CODE'].values
 
     act = []
     for code in codes:
-        p = ts.get_k_data(code.split('.')[0], start='2018-05-15', end='2018-05-16')
+        p = ts.get_k_data(code.split('.')[0], start='2018-05-17', end='2018-05-18')
         a = p['close'] / p['close'].shift(1) - 1
         act.append(a.values[1])
 
     data['A1'] = act
-    data.sort_values(ascending=False, by=['P1'])
+    data = data.sort_values(ascending=True, by=['P1'])
 
     for i in range(5, 30):
         percentage = round(data.shape[0] * 0.01 * i)

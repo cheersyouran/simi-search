@@ -44,6 +44,8 @@ class Market:
             else:
                 self.all_data = pd.read_csv(file, parse_dates=['DATE'], low_memory=False)
 
+            self.all_data['OPEN'] = 1
+
     def _init_codes(self):
         def apply(x):
             if int(x[0]) >= 6:
@@ -80,7 +82,7 @@ class Market:
         self.pattern = self.all_data[(self.all_data['CODE'] == code) &
                                      (self.all_data['DATE'] <= end_date) &
                                      (self.all_data['DATE'] >= start)]
-        targets['OPEN'] = 1
+
         self.targets = targets.dropna()
 
         if self.pattern.shape[0] == 0:

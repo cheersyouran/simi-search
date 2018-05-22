@@ -219,14 +219,14 @@ def init_800_RMVR_fft_data(input_data=None):
 
 if __name__ == '__main__':
 
-    init_dataset_matrix()
-    init_800_RMVR_fft_data()
+    # init_dataset_matrix()
+    # init_800_RMVR_fft_data()
 
-    # start = config.update_start
-    # end = config.update_end
-    #
-    # zz800_dataset, zz800_fft_dataset = update_data()
-    # zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
-    # zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
+    start = config.update_start
+    end = config.update_end
+
+    zz800_dataset, zz800_fft_dataset = update_data()
+    zz800_fft_dataset.to_csv(config.ZZ800_RM_VR_FFT, index=False)
+    zz800_dataset.to_csv(config.ZZ800_DATA, index=False)
 
     print('')

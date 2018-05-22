@@ -239,7 +239,11 @@ if __name__ == '__main__':
         make_prediction2()
         # make_prediction()
         # make_index_prediction()
-        market._pass_a_day()
+
+        if config.is_regression_test:
+            market._pass_a_week()
+        else:
+            market._pass_a_day()
 
     time_end = time.time()
     print('Total Search Time:', time_end - time_start)

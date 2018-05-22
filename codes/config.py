@@ -35,17 +35,21 @@ class Config:
         self.update_start = '2018-01-01'  # 更新数据的开始时间
         self.update_end = '2018-05-18'  # 更新数据的结束时间
 
-        self.start_date = pd.to_datetime('2018-05-16') #回测的开始时间。 比如'2018-01-01'，则从'2018-01-02'开始做预测
-        self.regression_days = 5
-        self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
-
         self.auto_update = False # 回测时是否自动更新数据
         self.plot_simi_stock = False # 是否画出相似股票
-        self.is_regression_test = False # 是回测还是预测
+
+        # self.is_regression_test = False  # 是回测还是预测
+        # self.start_date = pd.to_datetime('2018-05-16') #回测的开始时间。 比如'2018-01-01'，则从'2018-01-02'开始做预测
+        # self.regression_days = 5
+
+        self.is_regression_test = True
+        self.start_date = pd.to_datetime('2012-01-01')
+        self.regression_days = 300
+
+        self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间
 
         # 相似性查找参数
         self.pattern_length = 30
-
         self.nb_similar_make_prediction = 20  # avergae them as a pred
         self.nb_similar_of_all_similar = 4000  # 从所有股票的相似票中选择top N
         self.nb_similar_of_each_stock = 200

@@ -43,8 +43,9 @@ def find_similar_of_a_stock(code):
     if config.plot_simi_stock:
         plot_simi_stock(tops.head(config.nb_similar_make_prediction), all_data, pattern, code + '_simi_result', codes=code)
 
-    file_name = config.rootPath + '/output/per_200_similars/' + str(market.current_date.date()) + '_' + code + '_200_similars.csv'
-    tops.to_csv(file_name, index=False)
+    if ~config.is_regression_test:
+        file_name = config.rootPath + '/output/per_200_similars/' + str(market.current_date.date()) + '_' + code + '_200_similars.csv'
+        tops.to_csv(file_name, index=False)
     return tops
 
 
