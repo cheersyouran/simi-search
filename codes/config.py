@@ -43,7 +43,7 @@ class Config:
         # self.regression_days = 5
 
         self.is_regression_test = True
-        self.start_date = pd.to_datetime('2012-01-01')
+        self.start_date = pd.to_datetime('2012-01-04')
         self.regression_days = 300
 
         self.regression_end_date = self.start_date + timedelta(days=self.regression_days) # 回测结束时间

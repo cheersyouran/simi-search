@@ -9,13 +9,13 @@ sys.path.append(rootPath)
 from codes.config import config
 if 'Youran/Projects/' in config.rootPath:
     print('Using Test Config!')
-    config.nb_codes = 8
-    config.plot_simi_stock = False
-    config.nb_similar_of_each_stock = 100
-    config.nb_similar_make_prediction = 5
-    config.nb_similar_of_all_similar = 15
+    config.nb_codes = 20
     config.cores = 4
-    config.slide_window = 100
+    config.plot_simi_stock = False
+    # config.nb_similar_of_each_stock = 100
+    # config.nb_similar_make_prediction = 5
+    # config.nb_similar_of_all_similar = 15
+    # config.slide_window = 100
 
 import time
 import pandas as pd

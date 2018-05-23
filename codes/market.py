@@ -122,7 +122,7 @@ class Market:
 
     def get_span_ret(self, df, n):
         array = np.cumprod(df['RET'] / 100 + 1).values
-        return array[n]
+        return 1 if array[n] == 'nan' else array[n]
 
 
 market = Market()
