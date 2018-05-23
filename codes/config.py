@@ -32,8 +32,8 @@ class Config:
         # self.speed_method = 'value_ratio_fft_euclidean' # for 沪深300指数预测
         self.speed_method = 'rm_market_vr_fft' # for 沪深800选股
 
-        self.update_start = '2018-01-01'  # 更新数据的开始时间
-        self.update_end = '2018-05-18'  # 更新数据的结束时间
+        self.update_start = '2018-05-18'  # 更新数据的开始时间(数据库日期的最后一天的下一天)
+        self.update_end = '2018-05-21'  # 更新数据的结束时间(这一天也会被更新下来）
 
         self.auto_update = False # 回测时是否自动更新数据
         self.plot_simi_stock = False # 是否画出相似股票

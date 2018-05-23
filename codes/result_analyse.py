@@ -17,17 +17,19 @@ if __name__ == '__main__':
     data['A1'] = act
     data = data.sort_values(ascending=True, by=['P1'])
 
-    for i in range(5, 30):
-        percentage = round(data.shape[0] * 0.01 * i)
-
-        long = data.head(percentage)
-        short = data.tail(percentage)
+    percentage5 = round(data.shape[0] * 0.05)
+    for i in [1, 2, 3, 4, 5, 6]:
+        nb = percentage5 * i
+        print('\nPercentage: ', i * 5, '% (', nb, ')')
+        long = data.head(nb)
+        short = data.tail(nb)
 
         pos = long['A1'].mean()
         neg = short['A1'].mean()
 
-        print('\npos: ', pos)
+        print('pos: ', pos)
         print('neg: ', neg)
 
     p1 = pearsonr(data['P1'].values, act)[0]
-    print(p1)
+
+    print('\npearsonr', p1)

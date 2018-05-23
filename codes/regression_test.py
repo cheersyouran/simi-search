@@ -183,7 +183,7 @@ def get_prediction_and_calcu_corr(codes, pred, act):
                      'PRED5': pred[4], 'PRED10': pred[5], 'PRED20': pred[6],
                      'ACT1': act[0], 'ACT2': act[1], 'ACT3': act[2], 'ACT4': act[3],
                      'ACT5': act[4], 'ACT10': act[5], 'ACT20': act[6]}))
-
+    pred_act_result = pred_act_result.dropna()
     path = config.rootPath + '/output/pred_' + str(market.current_date.date()) + '.csv'
     pred_act_result.to_csv(path, index=False)
 
@@ -216,6 +216,7 @@ def get_prediction(codes, pred):
                                             'PRED4': pred[3], 'PRED5': pred[4], 'PRED10': pred[5],
                                             'PRED20': pred[6]}))
 
+    pred_result = pred_result.dropna()
     pred_result = pred_result.sort_values(ascending=False, by=['PRED5'])
 
     path = config.rootPath + '/output/pred_' + str(market.current_date.date()) + '.csv'
