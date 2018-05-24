@@ -2,10 +2,9 @@ from codes.config import config
 import os
 import pandas as pd
 import numpy as np
-import tushare as ts
+import math
 from codes.data_generator import update_data
 
-from memory_profiler import profile
 
 class Market:
     __instance = None
@@ -118,11 +117,11 @@ class Market:
 
     def get_span_market_ratio(self, df, n):
         array = np.cumprod(df['300_RATIO'] / 100 + 1).values
-        return array[n]
+        return 1 if math.isnan(array[n]) else array[n]
 
     def get_span_ret(self, df, n):
         array = np.cumprod(df['RET'] / 100 + 1).values
-        return 1 if array[n] == 'nan' else array[n]
+        return 1 if math.isnan(array[n]) else array[n]
 
 
 market = Market()

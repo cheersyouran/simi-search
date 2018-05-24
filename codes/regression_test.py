@@ -12,10 +12,10 @@ if 'Youran/Projects/' in config.rootPath:
     config.nb_codes = 20
     config.cores = 4
     config.plot_simi_stock = False
-    # config.nb_similar_of_each_stock = 100
-    # config.nb_similar_make_prediction = 5
-    # config.nb_similar_of_all_similar = 15
-    # config.slide_window = 100
+    config.nb_similar_of_each_stock = 100
+    config.nb_similar_make_prediction = 5
+    config.nb_similar_of_all_similar = 15
+    config.slide_window = 100
 
 import time
 import pandas as pd
@@ -115,7 +115,7 @@ def make_prediction2():
     tops = tops[tops[config.similarity_method] >= 0]
     tops = tops.head(config.nb_similar_of_all_similar)
 
-    tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_4K_similars.csv', index=False)
+    # tops.to_csv(config.rootPath + '/output/' + str(market.current_date.date()) + '_4K_similars.csv', index=False)
 
     print("---tops:", len(tops))
 
