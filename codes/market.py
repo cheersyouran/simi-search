@@ -116,12 +116,14 @@ class Market:
         return date_
 
     def get_span_market_ratio(self, df, n):
-        array = np.cumprod(df['300_RATIO'] / 100 + 1).values
-        return 1 if math.isnan(array[n-1]) else array[n]
+        array = np.cumprod(df['300_RATIO'][1:] / 100 + 1).values
+        array = np.insert(array, 0, 1)
+        return 1 if math.isnan(array[n]) else array[n]
 
     def get_span_ret(self, df, n):
-        array = np.cumprod(df['RET'] / 100 + 1).values
-        return 1 if math.isnan(array[n-1]) else array[n]
+        array = np.cumprod(df['RET'][1:] / 100 + 1).values
+        array = np.insert(array, 0, 1)
+        return 1 if math.isnan(array[n]) else array[n]
 
 
 market = Market()
