@@ -3,6 +3,5 @@
 /data
 **/raw_data
 **/*.zip
-**/pic/*
 **/result_analyse
 **/output
