@@ -5,3 +5,4 @@
 **/*.zip
 **/result_analyse
 **/output
+.DS_Store
